@@ -136,8 +136,12 @@ def business_application_reject(request, pk):
 
 # ---------- Reviewer: browse & view ----------
 
-@reviewer_required
+
 def reviewer_campaign_list(request):
+    """
+    Public list of active campaigns.
+    Anonymous users can browse; applying requires login.
+    """
     campaigns = (
         Campaign.objects.filter(status=CampaignStatus.ACTIVE)
         .select_related("business", "category", "county")
@@ -154,12 +158,13 @@ def reviewer_campaign_list(request):
 
     categories = Category.objects.filter(is_active=True)
 
-    # Annotate which campaigns the reviewer already applied to
-    applied_ids = set(
-        CampaignApplication.objects
-        .filter(reviewer=request.user)
-        .values_list("campaign_id", flat=True)
-    )
+    applied_ids = set()
+    if request.user.is_authenticated and request.user.role == "REVIEWER":
+        applied_ids = set(
+            CampaignApplication.objects
+            .filter(reviewer=request.user)
+            .values_list("campaign_id", flat=True)
+        )
 
     return render(request, "reviewer/campaigns_list.html", {
         "page_title": "Find Tasks",
@@ -169,19 +174,23 @@ def reviewer_campaign_list(request):
         "selected_category": category_id,
         "search": search,
         "applied_ids": applied_ids,
+        # tells the template we're in "public browse" mode
+        "is_public_browse": not request.user.is_authenticated,
     })
 
 
-@reviewer_required
+
 def reviewer_campaign_detail(request, slug):
     campaign = get_object_or_404(
         Campaign.objects.select_related("business", "category", "county"),
         slug=slug,
     )
 
-    existing = CampaignApplication.objects.filter(
-        campaign=campaign, reviewer=request.user
-    ).first()
+    existing = None
+    if request.user.is_authenticated and request.user.role == "REVIEWER":
+        existing = CampaignApplication.objects.filter(
+            campaign=campaign, reviewer=request.user
+        ).first()
 
     return render(request, "reviewer/campaign_detail.html", {
         "page_title": campaign.title,

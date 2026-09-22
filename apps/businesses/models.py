@@ -20,6 +20,7 @@ class Business(models.Model):
     )
     name = models.CharField(max_length=160)
     slug = models.SlugField(max_length=180, unique=True)
+    is_seed_data = models.BooleanField(default=False, db_index=True)
     description = models.TextField(blank=True)
 
     registration_number = models.CharField(max_length=60, blank=True)

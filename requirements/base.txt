@@ -8,3 +8,4 @@ drf-spectacular==0.28.0
 django-filter==25.1
 bleach==6.2.0
 Pillow==11.3.0
+Faker==23.3.0

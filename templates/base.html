@@ -18,8 +18,7 @@
         </button>
         <div class="collapse navbar-collapse" id="navMain">
             <ul class="navbar-nav ms-auto align-items-lg-center">
-                <li class="nav-item"><a class="nav-link" href="#">Find Tasks</a></li>
-                <li class="nav-item"><a class="nav-link" href="#">For Businesses</a></li>
+                <li class="nav-item"><a class="nav-link" href="{% url 'campaigns:reviewer_list' %}">Find Tasks</a></li>
 
                 {% if user.is_authenticated %}
                     <li class="nav-item dropdown">

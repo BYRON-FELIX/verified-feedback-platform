@@ -125,6 +125,13 @@
         This campaign is {{ campaign.get_status_display|lower }}{% if campaign.slots_remaining == 0 %} (all slots filled){% endif %}.
         Applications are closed.
     </div>
+{% elif not user.is_authenticated %}
+    <div class="d-flex justify-content-end mb-5">
+        <a href="{% url 'accounts:login' %}?next={% url 'campaigns:reviewer_detail' campaign.slug %}"
+           class="btn btn-primary btn-lg px-4">
+            Log in to apply
+        </a>
+    </div>
 {% else %}
     <div class="d-flex justify-content-end mb-5">
         <form method="post" action="{% url 'campaigns:reviewer_apply' campaign.slug %}">
