@@ -1,0 +1,197 @@
+{% extends "layouts/dashboard.html" %}
+
+{% block title %}{% if is_create %}New Campaign{% else %}Edit Campaign{% endif %} · VerifiedFeedback{% endblock %}
+{% block side_label %}Business{% endblock %}
+
+{% block sidebar %}
+    <li><a class="nav-link" href="/business/"><i class="bi bi-speedometer2"></i> Dashboard</a></li>
+    <li><a class="nav-link active" href="/campaigns/business/"><i class="bi bi-megaphone"></i> Campaigns</a></li>
+    <li><a class="nav-link" href="#"><i class="bi bi-inbox"></i> Submissions</a></li>
+    <li><a class="nav-link" href="#"><i class="bi bi-graph-up"></i> Analytics</a></li>
+    <li><a class="nav-link" href="/business/profile/"><i class="bi bi-building"></i> Profile</a></li>
+{% endblock %}
+
+{% block dashboard_content %}
+<form method="post" novalidate>
+    {% csrf_token %}
+
+    {% if form.non_field_errors %}
+        <div class="alert alert-danger">{{ form.non_field_errors.0 }}</div>
+    {% endif %}
+
+    {# ---------- Basics ---------- #}
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body p-4">
+            <h5 class="mb-3">Campaign basics</h5>
+            <div class="row g-3">
+                <div class="col-md-8">
+                    <label class="form-label">Title</label>
+                    {{ form.title }}
+                    {% if form.title.errors %}<div class="text-danger small">{{ form.title.errors.0 }}</div>{% endif %}
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Category</label>
+                    {{ form.category }}
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Campaign type</label>
+                    {{ form.campaign_type }}
+                </div>
+                <div class="col-md-8">
+                    <label class="form-label">Location (optional)</label>
+                    <div class="row g-2">
+                        <div class="col-md-6">{{ form.county }}</div>
+                        <div class="col-md-6">{{ form.location_description }}</div>
+                    </div>
+                </div>
+                <div class="col-12">
+                    <label class="form-label">Description</label>
+                    {{ form.description }}
+                    <div class="form-text">What is this campaign about? Reviewers will read this.</div>
+                </div>
+                <div class="col-12">
+                    <label class="form-label">Instructions</label>
+                    {{ form.instructions }}
+                    <div class="form-text">Step-by-step guidance for the reviewer.</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {# ---------- Reward & slots ---------- #}
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body p-4">
+            <h5 class="mb-3">Reward & participation</h5>
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label">Reward per participant (KSh)</label>
+                    {{ form.reward_amount_ksh }}
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Target participants</label>
+                    {{ form.target_participants }}
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Estimated time (minutes)</label>
+                    {{ form.estimated_minutes }}
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Start date</label>
+                    {{ form.start_date }}
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">End date</label>
+                    {{ form.end_date }}
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Experience must be within (days)</label>
+                    {{ form.min_days_since_experience }}
+                </div>
+            </div>
+            <div class="alert alert-light border mt-3 mb-0 small">
+                <strong>Note:</strong> reward is for genuine participation, not for a positive rating.
+                Reviewers can rate however they feel. This is enforced by platform policy.
+            </div>
+        </div>
+    </div>
+
+    {# ---------- Requirements ---------- #}
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body p-4">
+            <h5 class="mb-3">Eligibility requirements</h5>
+            <p class="text-muted small">
+                Each item is a rule the reviewer must satisfy to participate.
+                Do not include requirements about rating positively — they will be rejected.
+            </p>
+
+            {{ req_formset.management_form }}
+            <div class="table-responsive">
+                <table class="table align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th style="width: 55%;">Requirement</th>
+                            <th style="width: 15%;">Mandatory</th>
+                            <th style="width: 15%;">Order</th>
+                            <th style="width: 15%;">Delete</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for f in req_formset %}
+                        <tr>
+                            <td>{{ f.text }}{{ f.id }}</td>
+                            <td class="text-center">{{ f.is_mandatory }}</td>
+                            <td>{{ f.order }}</td>
+                            <td class="text-center">{{ f.DELETE }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    {# ---------- Questions ---------- #}
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body p-4">
+            <h5 class="mb-3">Questions</h5>
+            <p class="text-muted small">
+                These are the questions the reviewer answers after the experience.
+                For choice types, put each option on its own line in the "Options" box.
+            </p>
+
+            {% if q_formset.non_form_errors %}
+                <div class="alert alert-danger small">
+                    {{ q_formset.non_form_errors }}
+                </div>
+            {% endif %}
+
+            {{ q_formset.management_form }}
+            <div class="table-responsive">
+                <table class="table align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th style="width: 35%;">Question</th>
+                            <th style="width: 15%;">Type</th>
+                            <th style="width: 25%;">Options</th>
+                            <th style="width: 10%;">Required</th>
+                            <th style="width: 8%;">Order</th>
+                            <th style="width: 7%;">Delete</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for f in q_formset %}
+                        <tr>
+                            <td>
+                                {{ f.text }}{{ f.id }}
+                                {% for e in f.text.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
+                            </td>
+                            <td>
+                                {{ f.question_type }}
+                                {% for e in f.question_type.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
+                            </td>
+                            <td>
+                                {{ f.options }}
+                                {% for e in f.options.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
+                            </td>
+                            <td class="text-center">{{ f.is_required }}</td>
+                            <td>
+                                {{ f.order }}
+                                {% for e in f.order.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
+                            </td>
+                            <td class="text-center">{{ f.DELETE }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="d-flex justify-content-between mb-5">
+        <a href="{% url 'campaigns:business_list' %}" class="btn btn-outline-secondary">Cancel</a>
+        <button type="submit" class="btn btn-primary">
+            Save as draft
+        </button>
+    </div>
+</form>
+{% endblock %}

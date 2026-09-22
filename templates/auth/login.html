@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block title %}Log in · VerifiedFeedback{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-5">
+            <div class="card shadow-sm border-0">
+                <div class="card-body p-4">
+                    <h3 class="mb-4">Log in</h3>
+
+                    {% if form.errors %}
+                        <div class="alert alert-danger small">
+                            Your email and password didn't match. Please try again.
+                        </div>
+                    {% endif %}
+
+                    <form method="post" novalidate>
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label class="form-label">Email</label>
+                            {{ form.username }}
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Password</label>
+                            {{ form.password }}
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">Log in</button>
+                    </form>
+
+                    <hr class="my-4">
+
+                    <div class="text-center small">
+                        New here?
+                        <a href="{% url 'accounts:signup_reviewer' %}">Join as reviewer</a> ·
+                        <a href="{% url 'accounts:signup_business' %}">Register a business</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

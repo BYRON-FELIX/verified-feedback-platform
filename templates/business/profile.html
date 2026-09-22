@@ -1,0 +1,115 @@
+{% extends "layouts/dashboard.html" %}
+
+{% block title %}Business Profile · VerifiedFeedback{% endblock %}
+{% block side_label %}Business{% endblock %}
+
+{% block sidebar %}
+    <li><a class="nav-link" href="/business/"><i class="bi bi-speedometer2"></i> Dashboard</a></li>
+    <li><a class="nav-link" href="/campaigns/business/"><i class="bi bi-megaphone"></i> Campaigns</a></li>
+    <li><a class="nav-link" href="#"><i class="bi bi-inbox"></i> Submissions</a></li>
+    <li><a class="nav-link" href="#"><i class="bi bi-graph-up"></i> Analytics</a></li>
+    <li><a class="nav-link active" href="/business/profile/"><i class="bi bi-building"></i> Profile</a></li>
+{% endblock %}
+
+{% block dashboard_content %}
+<div class="row g-4">
+    <div class="col-lg-4">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body text-center p-4">
+                {% if business.logo %}
+                    <img src="{{ business.logo.url }}" alt="{{ business.name }}"
+                         class="rounded" style="width:72px;height:72px;object-fit:cover;">
+                {% else %}
+                    <div class="rounded bg-primary-subtle text-primary d-inline-flex align-items-center justify-content-center"
+                         style="width:72px;height:72px;font-size:28px;font-weight:600;">
+                        {{ business.display_initial|default:"?" }}
+                    </div>
+                {% endif %}
+                <h5 class="mt-3 mb-1">{{ business.name|default:"Your business" }}</h5>
+                {% if business.industry %}<p class="text-muted small mb-2">{{ business.industry }}</p>{% endif %}
+
+                <div class="mt-3">
+                    {% if business.status == "APPROVED" %}
+                        <span class="badge bg-success-subtle text-success-emphasis">
+                            <i class="bi bi-check-circle"></i> Verified
+                        </span>
+                    {% elif business.status == "PENDING" %}
+                        <span class="badge bg-warning-subtle text-warning-emphasis">Pending approval</span>
+                    {% elif business.status == "REJECTED" %}
+                        <span class="badge bg-danger-subtle text-danger-emphasis">Rejected</span>
+                    {% elif business.status == "SUSPENDED" %}
+                        <span class="badge bg-danger-subtle text-danger-emphasis">Suspended</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-8">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-4">
+                <h5 class="mb-1">Business details</h5>
+                <p class="text-muted small mb-4">
+                    These details appear on your public business page and on campaign listings.
+                </p>
+
+                <form method="post" enctype="multipart/form-data" novalidate>
+                    {% csrf_token %}
+
+                    <div class="row g-3">
+                        <div class="col-md-8">
+                            <label class="form-label">Business name</label>
+                            {{ form.name }}
+                            {% if form.name.errors %}<div class="text-danger small">{{ form.name.errors.0 }}</div>{% endif %}
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Industry</label>
+                            {{ form.industry }}
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label">Logo</label>
+                            {{ form.logo }}
+                            <div class="form-text">PNG or JPG, up to 2 MB.</div>
+                            {% if form.logo.errors %}<div class="text-danger small">{{ form.logo.errors.0 }}</div>{% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Website</label>
+                            {{ form.website }}
+                        </div>
+
+                        <div class="col-12">
+                            <label class="form-label">Description</label>
+                            {{ form.description }}
+                        </div>
+
+                        <div class="col-md-4">
+                            <label class="form-label">Registration number</label>
+                            {{ form.registration_number }}
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">KRA PIN</label>
+                            {{ form.kra_pin }}
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Physical address</label>
+                            {{ form.physical_address }}
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label">Support email</label>
+                            {{ form.support_email }}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Support phone</label>
+                            {{ form.support_phone }}
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary mt-4">Save profile</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

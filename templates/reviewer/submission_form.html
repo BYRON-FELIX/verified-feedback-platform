@@ -1,0 +1,101 @@
+{% extends "layouts/dashboard.html" %}
+
+{% block title %}Submit task · {{ campaign.title }}{% endblock %}
+{% block side_label %}Reviewer{% endblock %}
+
+{% block sidebar %}
+    <li><a class="nav-link" href="/reviewer/"><i class="bi bi-speedometer2"></i> Dashboard</a></li>
+    <li><a class="nav-link" href="/campaigns/reviewer/"><i class="bi bi-search"></i> Find Tasks</a></li>
+    <li><a class="nav-link" href="{% url 'campaigns:reviewer_my_applications' %}"><i class="bi bi-inbox"></i> My Applications</a></li>
+    <li><a class="nav-link active" href="{% url 'submissions:mine' %}"><i class="bi bi-file-earmark-text"></i> My Submissions</a></li>
+    <li><a class="nav-link" href="{% url 'withdrawals:wallet' %}"><i class="bi bi-wallet2"></i> Wallet</a></li>
+    <li><a class="nav-link" href="{% url 'reviewers:profile' %}"><i class="bi bi-person"></i> Profile</a></li>
+{% endblock %}
+
+{% block dashboard_content %}
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-body p-4">
+        <div class="d-flex justify-content-between align-items-start mb-2">
+            <div>
+                <span class="badge bg-secondary-subtle text-secondary-emphasis">{{ campaign.get_campaign_type_display }}</span>
+                <h5 class="mt-2 mb-1">{{ campaign.title }}</h5>
+                <small class="text-muted">{{ campaign.business.name }}</small>
+            </div>
+            <span class="badge bg-success-subtle text-success-emphasis py-2 px-3">
+                Reward: KSh {{ campaign.reward_amount_ksh }}
+            </span>
+        </div>
+    </div>
+</div>
+
+<form method="post" novalidate>
+    {% csrf_token %}
+
+    {% if form.non_field_errors %}
+        <div class="alert alert-danger">{{ form.non_field_errors.0 }}</div>
+    {% endif %}
+
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body p-4">
+            <h6 class="mb-3">Overall feedback</h6>
+
+            <div class="mb-3">
+                <label class="form-label d-block">{{ form.overall_rating.label }}</label>
+                {% for radio in form.overall_rating %}
+                    <div class="form-check form-check-inline">
+                        {{ radio.tag }}
+                        <label class="form-check-label" for="{{ radio.id_for_label }}">{{ radio.choice_label }}</label>
+                    </div>
+                {% endfor %}
+                {% if form.overall_rating.errors %}<div class="text-danger small">{{ form.overall_rating.errors.0 }}</div>{% endif %}
+                <div class="form-text">Rate honestly. You will be paid the same regardless of your rating.</div>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">{{ form.written_feedback.label }}</label>
+                {{ form.written_feedback }}
+                {% if form.written_feedback.errors %}<div class="text-danger small">{{ form.written_feedback.errors.0 }}</div>{% endif %}
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">{{ form.experience_date.label }}</label>
+                {{ form.experience_date }}
+                {% if form.experience_date.errors %}<div class="text-danger small">{{ form.experience_date.errors.0 }}</div>{% endif %}
+            </div>
+        </div>
+    </div>
+
+    {% if questions_and_fields %}
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body p-4">
+            <h6 class="mb-3">Campaign questions</h6>
+            {% for q, field in questions_and_fields %}
+                <div class="mb-4">
+                    <label class="form-label fw-semibold">{{ field.label }}</label>
+                    {% if q.question_type == "SINGLE_CHOICE" or q.question_type == "YES_NO" or q.question_type == "RATING" %}
+                        <div>{{ field }}</div>
+                    {% elif q.question_type == "MULTI_CHOICE" %}
+                        <div>{{ field }}</div>
+                    {% else %}
+                        {{ field }}
+                    {% endif %}
+                    {% if field.errors %}<div class="text-danger small">{{ field.errors.0 }}</div>{% endif %}
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="alert alert-light border small">
+        <strong>By submitting</strong> you confirm this feedback reflects your real experience.
+        Submitting false or duplicated information may result in account suspension and forfeiture of rewards.
+    </div>
+
+    <div class="d-flex justify-content-between mb-5">
+        <a href="{% url 'campaigns:reviewer_detail' campaign.slug %}" class="btn btn-outline-secondary">Cancel</a>
+        <button type="submit" class="btn btn-primary btn-lg px-4">
+            Submit feedback &amp; get paid
+        </button>
+    </div>
+</form>
+{% endblock %}

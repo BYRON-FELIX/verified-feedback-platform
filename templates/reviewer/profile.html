@@ -1,0 +1,132 @@
+{% extends "layouts/dashboard.html" %}
+
+{% block title %}Profile · VerifiedFeedback{% endblock %}
+{% block side_label %}Reviewer{% endblock %}
+
+{% block sidebar %}
+    <li><a class="nav-link" href="/reviewer/"><i class="bi bi-speedometer2"></i> Dashboard</a></li>
+    <li><a class="nav-link" href="/campaigns/reviewer/"><i class="bi bi-search"></i> Find Tasks</a></li>
+    <li><a class="nav-link" href="{% url 'campaigns:reviewer_my_applications' %}"><i class="bi bi-inbox"></i> My Applications</a></li>
+    <li><a class="nav-link" href="{% url 'submissions:mine' %}"><i class="bi bi-file-earmark-text"></i> My Submissions</a></li>
+    <li><a class="nav-link" href="{% url 'withdrawals:wallet' %}"><i class="bi bi-wallet2"></i> Wallet</a></li>
+    <li><a class="nav-link active" href="{% url 'reviewers:profile' %}"><i class="bi bi-person"></i> Profile</a></li>
+{% endblock %}
+
+{% block dashboard_content %}
+<div class="row g-4">
+    <div class="col-lg-4">
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-body text-center p-4">
+                <div class="rounded-circle bg-primary-subtle text-primary d-inline-flex align-items-center justify-content-center"
+                     style="width:72px;height:72px;font-size:28px;font-weight:600;">
+                    {{ request.user.email|slice:":1"|upper }}
+                </div>
+                <h5 class="mt-3 mb-1">{{ request.user.get_full_name|default:request.user.email }}</h5>
+                <p class="text-muted small mb-3">{{ request.user.email }}</p>
+
+                {% if request.user.is_phone_verified %}
+                    <span class="badge bg-success-subtle text-success-emphasis">
+                        <i class="bi bi-check-circle"></i> Phone verified
+                    </span>
+                {% else %}
+                    <span class="badge bg-warning-subtle text-warning-emphasis">
+                        Phone not verified
+                    </span>
+                {% endif %}
+
+                <hr>
+
+                <div class="row text-center">
+                    <div class="col-4">
+                        <div class="text-muted small">Trust</div>
+                        <div class="fw-bold">{{ profile.trust_score }}</div>
+                    </div>
+                    <div class="col-4">
+                        <div class="text-muted small">Tasks</div>
+                        <div class="fw-bold">{{ submission_count }}</div>
+                    </div>
+                    <div class="col-4">
+                        <div class="text-muted small">Earned</div>
+                        <div class="fw-bold">KSh {{ wallet.lifetime_earnings_ksh }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-4">
+                <h6 class="mb-3">Security</h6>
+                <a href="{% url 'reviewers:change_password' %}" class="btn btn-outline-secondary w-100">
+                    <i class="bi bi-key"></i> Change password
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-8">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-4">
+                <h5 class="mb-3">Your details</h5>
+
+                <form method="post" novalidate>
+                    {% csrf_token %}
+
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">First name</label>
+                            {{ form.first_name }}
+                            {% if form.first_name.errors %}<div class="text-danger small">{{ form.first_name.errors.0 }}</div>{% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Last name</label>
+                            {{ form.last_name }}
+                            {% if form.last_name.errors %}<div class="text-danger small">{{ form.last_name.errors.0 }}</div>{% endif %}
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label">Phone number</label>
+                            {{ form.phone_number }}
+                            <div class="form-text">Required before you can withdraw earnings.</div>
+                            {% if form.phone_number.errors %}<div class="text-danger small">{{ form.phone_number.errors.0 }}</div>{% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Date of birth</label>
+                            {{ form.date_of_birth }}
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label">County</label>
+                            {{ form.county }}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">City / Town</label>
+                            {{ form.city }}
+                        </div>
+
+                        <div class="col-12">
+                            <label class="form-label">Short bio</label>
+                            {{ form.bio }}
+                        </div>
+
+                        <div class="col-12">
+                            <label class="form-label">Preferred campaign categories</label>
+                            <div class="border rounded p-3" style="max-height:220px; overflow-y:auto;">
+                                {% for checkbox in form.preferred_categories %}
+                                    <div class="form-check">
+                                        {{ checkbox.tag }}
+                                        <label class="form-check-label" for="{{ checkbox.id_for_label }}">
+                                            {{ checkbox.choice_label }}
+                                        </label>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary mt-4">Save changes</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

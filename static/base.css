@@ -1,0 +1,19 @@
+:root {
+    --vf-primary: #0F5132;
+    --vf-accent: #0D6EFD;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    color: #1a1a1a;
+    background: #ffffff;
+}
+
+.btn-primary {
+    background-color: var(--vf-primary);
+    border-color: var(--vf-primary);
+}
+.btn-primary:hover {
+    background-color: #0b3d26;
+    border-color: #0b3d26;
+}

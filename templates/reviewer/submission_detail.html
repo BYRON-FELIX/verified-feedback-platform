@@ -1,0 +1,74 @@
+{% extends "layouts/dashboard.html" %}
+
+{% block title %}Submission · VerifiedFeedback{% endblock %}
+{% block side_label %}Reviewer{% endblock %}
+
+{% block sidebar %}
+    <li><a class="nav-link" href="/reviewer/"><i class="bi bi-speedometer2"></i> Dashboard</a></li>
+    <li><a class="nav-link" href="/campaigns/reviewer/"><i class="bi bi-search"></i> Find Tasks</a></li>
+    <li><a class="nav-link" href="{% url 'campaigns:reviewer_my_applications' %}"><i class="bi bi-inbox"></i> My Applications</a></li>
+    <li><a class="nav-link active" href="{% url 'submissions:mine' %}"><i class="bi bi-file-earmark-text"></i> My Submissions</a></li>
+    <li><a class="nav-link" href="{% url 'withdrawals:wallet' %}"><i class="bi bi-wallet2"></i> Wallet</a></li>
+    <li><a class="nav-link" href="{% url 'reviewers:profile' %}"><i class="bi bi-person"></i> Profile</a></li>
+{% endblock %}
+
+{% block dashboard_content %}
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-body p-4">
+        <div class="d-flex justify-content-between align-items-start mb-2">
+            <div>
+                <span class="badge bg-secondary-subtle text-secondary-emphasis">{{ submission.campaign.get_campaign_type_display }}</span>
+                <h4 class="mt-2 mb-1">{{ submission.campaign.title }}</h4>
+                <small class="text-muted">{{ submission.campaign.business.name }}</small>
+            </div>
+            <div class="text-end">
+                {% if submission.status == "VERIFIED" %}<span class="badge bg-success mb-2">Verified</span>
+                {% elif submission.status == "SUBMITTED" %}<span class="badge bg-info text-dark mb-2">Submitted</span>
+                {% elif submission.status == "DRAFT" %}<span class="badge bg-secondary mb-2">Draft</span>
+                {% elif submission.status == "REJECTED" %}<span class="badge bg-danger mb-2">Rejected</span>
+                {% endif %}
+                <div class="text-muted small">Reward</div>
+                <div class="fw-bold">KSh {{ submission.reward_amount_ksh }}</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-body p-4">
+        <h6 class="mb-3">Your feedback</h6>
+        <div class="mb-3">
+            <div class="text-muted small">Overall rating</div>
+            <div class="fs-5">
+                {% if submission.overall_rating %}{{ submission.overall_rating }} / 5 ★{% else %}—{% endif %}
+            </div>
+        </div>
+        <div class="mb-3">
+            <div class="text-muted small">Written feedback</div>
+            <p class="mb-0">{{ submission.written_feedback|linebreaks }}</p>
+        </div>
+        <div>
+            <div class="text-muted small">Date of experience</div>
+            <div>{{ submission.experience_date|default:"—" }}</div>
+        </div>
+    </div>
+</div>
+
+{% if answers %}
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-body p-4">
+        <h6 class="mb-3">Answers</h6>
+        {% for a in answers %}
+            <div class="mb-3">
+                <div class="text-muted small">{{ a.question.text }}</div>
+                <div>{{ a.answer_text }}</div>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+<div class="d-flex justify-content-between mb-5">
+    <a href="{% url 'submissions:mine' %}" class="btn btn-outline-secondary">← All submissions</a>
+</div>
+{% endblock %}

@@ -1,0 +1,59 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+ENV/
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# Django
+*.log
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+/media/*
+!/media/.gitkeep
+/staticfiles/
+/static_root/
+
+# Env
+.env
+.env.*
+!.env.example
+
+# IDE
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Docker
+*.pid
+
+# Logs
+logs/*.log
+!/logs/.gitkeep
+
+# Testing
+.coverage
+htmlcov/
+.pytest_cache/
+.tox/
+
+# Celery
+celerybeat-schedule
+celerybeat.pid

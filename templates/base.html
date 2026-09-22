@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Verified Feedback Platform{% endblock %}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="/static/css/base.css">
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom">
+    <div class="container">
+        <a class="navbar-brand fw-bold" href="/">VerifiedFeedback</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navMain" title="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navMain">
+            <ul class="navbar-nav ms-auto align-items-lg-center">
+                <li class="nav-item"><a class="nav-link" href="#">Find Tasks</a></li>
+                <li class="nav-item"><a class="nav-link" href="#">For Businesses</a></li>
+
+                {% if user.is_authenticated %}
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
+                            {{ user.display_name }}
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><span class="dropdown-item-text small text-muted">{{ user.role }}</span></li>
+                            <li><hr class="dropdown-divider"></li>
+                            {% if user.role == "ADMIN" %}
+                                <li><a class="dropdown-item" href="/django-admin/">Admin panel</a></li>
+                            {% endif %}
+                            <li>
+                                <form method="post" action="{% url 'accounts:logout' %}">
+                                    {% csrf_token %}
+                                    <button type="submit" class="dropdown-item">Log out</button>
+                                </form>
+                            </li>
+                        </ul>
+                    </li>
+                {% else %}
+                    <li class="nav-item"><a class="nav-link" href="{% url 'accounts:login' %}">Log in</a></li>
+                    <li class="nav-item ms-lg-2">
+                        <a class="btn btn-primary btn-sm px-3" href="{% url 'accounts:signup_reviewer' %}">
+                            Sign up
+                        </a>
+                    </li>
+                {% endif %}
+            </ul>
+        </div>
+    </div>
+</nav>
+
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer class="border-top mt-5 py-4 text-muted">
+        <div class="container text-center small">
+            &copy; {% now "Y" %} Verified Feedback Platform · Kenya
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

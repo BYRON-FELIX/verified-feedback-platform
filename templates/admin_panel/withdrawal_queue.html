@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+
+{% block title %}Admin · Withdrawal queue{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <h3 class="mb-4">Withdrawal queue</h3>
+
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body">
+            <h6 class="mb-3">Pending ({{ pending|length }})</h6>
+            {% if pending %}
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Requested</th>
+                                <th>User</th>
+                                <th>Amount</th>
+                                <th>Net</th>
+                                <th>Phone</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for w in pending %}
+                            <tr>
+                                <td><small>{{ w.requested_at|date:"M d, H:i" }}</small></td>
+                                <td>{{ w.user.email }}</td>
+                                <td>KSh {{ w.amount_ksh }}</td>
+                                <td>KSh {{ w.net_amount_ksh }}</td>
+                                <td>{{ w.destination_phone }}</td>
+                                <td>
+                                    {% if w.status == "PENDING" %}<span class="badge bg-warning text-dark">Pending</span>
+                                    {% elif w.status == "PROCESSING" %}<span class="badge bg-info text-dark">Processing</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if w.status == "PENDING" %}
+                                    <form method="post" action="{% url 'withdrawals:admin_action' w.pk 'processing' %}" class="d-inline">
+                                        {% csrf_token %}
+                                        <button class="btn btn-sm btn-outline-info">Processing</button>
+                                    </form>
+                                    {% endif %}
+                                    {% if w.status == "PENDING" or w.status == "PROCESSING" %}
+                                    <form method="post" action="{% url 'withdrawals:admin_action' w.pk 'complete' %}" class="d-inline">
+                                        {% csrf_token %}
+                                        <button class="btn btn-sm btn-success" onclick="return confirm('Mark as completed? Wallet will be debited.')">Complete</button>
+                                    </form>
+                                    <form method="post" action="{% url 'withdrawals:admin_action' w.pk 'fail' %}" class="d-inline">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="reason" value="Payment failed.">
+                                        <button class="btn btn-sm btn-outline-danger">Fail</button>
+                                    </form>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <p class="text-muted mb-0">No pending withdrawals.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm">
+        <div class="card-body">
+            <h6 class="mb-3">Recent (last 25)</h6>
+            {% if recent %}
+                <div class="table-responsive">
+                    <table class="table align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Requested</th>
+                                <th>User</th>
+                                <th>Amount</th>
+                                <th>Status</th>
+                                <th>Reference</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for w in recent %}
+                            <tr>
+                                <td><small>{{ w.requested_at|date:"M d, H:i" }}</small></td>
+                                <td>{{ w.user.email }}</td>
+                                <td>KSh {{ w.amount_ksh }}</td>
+                                <td><span class="badge bg-secondary">{{ w.get_status_display }}</span></td>
+                                <td><small>{{ w.provider_reference|default:"—" }}</small></td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <p class="text-muted mb-0">No recent withdrawals.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

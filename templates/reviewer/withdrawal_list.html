@@ -1,0 +1,62 @@
+{% extends "layouts/dashboard.html" %}
+
+{% block title %}Withdrawals · VerifiedFeedback{% endblock %}
+{% block side_label %}Reviewer{% endblock %}
+
+{% block sidebar %}
+    <li><a class="nav-link" href="/reviewer/"><i class="bi bi-speedometer2"></i> Dashboard</a></li>
+    <li><a class="nav-link" href="/campaigns/reviewer/"><i class="bi bi-search"></i> Find Tasks</a></li>
+    <li><a class="nav-link" href="{% url 'campaigns:reviewer_my_applications' %}"><i class="bi bi-inbox"></i> My Applications</a></li>
+    <li><a class="nav-link" href="{% url 'submissions:mine' %}"><i class="bi bi-file-earmark-text"></i> My Submissions</a></li>
+    <li><a class="nav-link active" href="{% url 'withdrawals:wallet' %}"><i class="bi bi-wallet2"></i> Wallet</a></li>
+    <li><a class="nav-link" href="{% url 'reviewers:profile' %}"><i class="bi bi-person"></i> Profile</a></li>
+{% endblock %}
+
+{% block dashboard_content %}
+{% if withdrawals %}
+    <div class="card border-0 shadow-sm">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Requested</th>
+                        <th>Amount</th>
+                        <th>Net</th>
+                        <th>Phone</th>
+                        <th>Status</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for w in withdrawals %}
+                    <tr>
+                        <td><small class="text-muted">{{ w.requested_at|date:"M d, Y H:i" }}</small></td>
+                        <td>KSh {{ w.amount_ksh }}</td>
+                        <td>KSh {{ w.net_amount_ksh }}</td>
+                        <td><small>{{ w.destination_phone }}</small></td>
+                        <td>
+                            {% if w.status == "COMPLETED" %}<span class="badge bg-success">Completed</span>
+                            {% elif w.status == "PENDING" %}<span class="badge bg-warning text-dark">Pending</span>
+                            {% elif w.status == "PROCESSING" %}<span class="badge bg-info text-dark">Processing</span>
+                            {% elif w.status == "FAILED" %}<span class="badge bg-danger">Failed</span>
+                            {% elif w.status == "CANCELLED" %}<span class="badge bg-secondary">Cancelled</span>
+                            {% else %}<span class="badge bg-secondary">{{ w.get_status_display }}</span>
+                            {% endif %}
+                        </td>
+                        <td><a href="{% url 'withdrawals:detail' w.pk %}" class="btn btn-sm btn-outline-dark">View</a></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+{% else %}
+    <div class="card border-0 shadow-sm">
+        <div class="card-body text-center py-5">
+            <i class="bi bi-wallet2 fs-1 text-muted"></i>
+            <h5 class="mt-3">No withdrawals yet</h5>
+            <a href="{% url 'withdrawals:request' %}" class="btn btn-primary mt-2">Request withdrawal</a>
+        </div>
+    </div>
+{% endif %}
+{% endblock %}
