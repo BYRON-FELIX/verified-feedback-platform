@@ -1,1 +1,6 @@
 -r base.txt
+
+gunicorn
+whitenoise
+dj-database-url
+psycopg2-binary
