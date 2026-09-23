@@ -10,11 +10,7 @@ CORS_ALLOWED_ORIGINS = env.list("CORS_ALLOWED_ORIGINS", default=[])
 CORS_ALLOW_ALL_ORIGINS = False
 
 # Database
-DATABASES = {
-    "default": env.db(
-        "DATABASE_URL",
-    )
-}
+DATABASES = "postgresql://verified_feedback_db_user:KBryKfJcSG5mp7gQLFMEvjPwbSLzyqnc@dpg-dap8sjvf3r2c73eearhg-a.oregon-postgres.render.com/verified_feedback_db"
 
 # Static files
 STATIC_ROOT = BASE_DIR / "staticfiles"
