@@ -79,7 +79,10 @@ class ReviewerSignupForm(BaseSignupForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields["country"].queryset = Country.objects.filter(is_active=True)
+        self.fields["country"].queryset = Country.objects.filter(is_active=True).order_by("name")
+        kenya = self.fields["country"].queryset.filter(code="KE").first()
+        if kenya:
+            self.fields["country"].initial = kenya
 
     def clean_phone_number(self):
         phone = (self.cleaned_data.get("phone_number") or "").strip()

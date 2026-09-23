@@ -1,105 +1,106 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="dash-wrap bg-vf-paper">
+<div class="flex min-h-[calc(100vh-56px)]">
 
-    {# Backdrop (mobile only) #}
-    <div class="dash-backdrop" id="dashBackdrop"></div>
+    {# ── BACKDROP ── #}
+    <div id="dashBackdrop" onclick="closeDrawer()" class="hidden fixed inset-0 bg-black/40 z-40 lg:hidden"></div>
 
-    {# Sidebar / drawer #}
+    {# ── SIDEBAR ── #}
     {% if user.is_authenticated %}
-        <aside class="dash-side" id="dashSide">
-            <div class="dash-side-close">
-                <button type="button" id="dashClose" aria-label="Close menu">
-                    <i class="bi bi-x-lg"></i>
-                </button>
-            </div>
-            {% include "includes/dashboard_nav.html" %}
-        </aside>
-    {% endif %}
+    <aside id="dashSide"
+           class="fixed top-0 bottom-0 left-0 z-50 w-72 max-w-[85vw] bg-gradient-to-b from-[#eef7f1] to-[#e7f1eb] border-r border-vf-line flex flex-col -translate-x-full transition-transform duration-250 lg:translate-x-0 lg:static lg:z-auto overflow-y-auto">
 
-    {# Main area #}
-    <div class="dash-main font-sans">
-
-        {# Top bar (hamburger + heading + actions) #}
-        <div class="dash-topbar d-flex align-items-center justify-content-between mb-4 gap-2 font-sans">
-            <div class="d-flex align-items-center flex-grow-1 min-w-0">
-                {% if user.is_authenticated %}
-                    <button class="dash-hamburger" id="dashOpen" aria-label="Open menu" aria-controls="dashSide" aria-expanded="false">
-                        <i class="bi bi-list"></i>
-                    </button>
-                {% endif %}
-                <h3 class="mb-0 text-break">{% block heading %}{{ page_title }}{% endblock %}</h3>
-            </div>
-            <div class="flex-shrink-0">{% block heading_actions %}{% endblock %}</div>
+        <!-- Sidebar close (mobile) -->
+        <div class="flex justify-end p-3 lg:hidden">
+            <button onclick="closeDrawer()" class="w-9 h-9 grid place-items-center rounded-xl text-vf-muted hover:bg-black/5 transition">
+                <i class="bi bi-x-lg"></i>
+            </button>
         </div>
 
-        {% if messages %}
-            {% for message in messages %}
-                <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show">
-                    {{ message }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Dismiss alert" title="Dismiss alert"></button>
-                </div>
-            {% endfor %}
-        {% endif %}
+        {% include "includes/dashboard_nav.html" %}
+    </aside>
+    {% endif %}
 
-        {% block dashboard_content %}{% endblock %}
+    {# ── MAIN ── #}
+    <div class="flex-1 min-w-0 flex flex-col">
+
+        {# ── TOP BAR ── #}
+        <div class="sticky top-0 z-20 flex items-center gap-3 px-4 py-3 bg-vf-paper/90 backdrop-blur-lg border-b border-vf-line lg:hidden">
+            {% if user.is_authenticated %}
+            <button onclick="openDrawer()" aria-label="Open menu"
+                    class="w-10 h-10 grid place-items-center rounded-xl border border-vf-line bg-white text-vf-ink shrink-0 hover:border-vf-primary transition">
+                <i class="bi bi-list text-lg"></i>
+            </button>
+            {% endif %}
+            <h2 class="text-base font-extrabold text-vf-ink truncate">{% block heading %}{{ page_title }}{% endblock %}</h2>
+            <div class="ml-auto shrink-0">{% block heading_actions_mobile %}{% endblock %}</div>
+        </div>
+
+        <main class="flex-1 px-4 py-5 sm:px-6 lg:px-8 lg:py-7 pb-28 lg:pb-8">
+            <!-- Desktop heading -->
+            <div class="hidden lg:flex items-center justify-between gap-4 mb-6">
+                <h1 class="text-2xl font-extrabold tracking-tight text-vf-ink">{% block heading_desktop %}{{ page_title }}{% endblock %}</h1>
+                <div class="shrink-0">{% block heading_actions %}{% endblock %}</div>
+            </div>
+
+            {# Flash messages #}
+            {% if messages %}
+            <div class="space-y-2 mb-5">
+                {% for message in messages %}
+                <div class="flex items-start gap-3 rounded-xl border px-4 py-3 text-sm font-semibold
+                    {% if message.tags == 'success' %}bg-emerald-50 border-emerald-200 text-emerald-800
+                    {% elif message.tags == 'error' or message.tags == 'danger' %}bg-red-50 border-red-200 text-red-700
+                    {% elif message.tags == 'warning' %}bg-amber-50 border-amber-200 text-amber-800
+                    {% else %}bg-sky-50 border-sky-200 text-sky-800{% endif %}">
+                    <i class="bi {% if message.tags == 'success' %}bi-check-circle{% elif message.tags == 'error' or message.tags == 'danger' %}bi-exclamation-circle{% elif message.tags == 'warning' %}bi-exclamation-triangle{% else %}bi-info-circle{% endif %} shrink-0 mt-0.5"></i>
+                    <span>{{ message }}</span>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            {% block dashboard_content %}{% endblock %}
+        </main>
     </div>
 
+    {# ── MOBILE BOTTOM NAV (reviewer only) ── #}
     {% if user.is_authenticated and user.role == "REVIEWER" %}
-        <nav class="mobile-bottom-nav" aria-label="Quick navigation">
-            <a class="{% if nav_active == 'dashboard' %}active{% endif %}" href="{% url 'reviewers:dashboard' %}">
-                <i class="bi bi-grid-1x2-fill"></i><span>Home</span>
-            </a>
-            <a class="{% if nav_active == 'campaigns' %}active{% endif %}" href="{% url 'campaigns:reviewer_list' %}">
-                <i class="bi bi-search"></i><span>Tasks</span>
-            </a>
-            <a class="{% if nav_active == 'submissions' %}active{% endif %}" href="{% url 'submissions:mine' %}">
-                <i class="bi bi-file-earmark-text"></i><span>Submissions</span>
-            </a>
-            <a class="{% if nav_active == 'wallet' %}active{% endif %}" href="{% url 'withdrawals:wallet' %}">
-                <i class="bi bi-wallet2"></i><span>Wallet</span>
-            </a>
-        </nav>
+    <nav class="fixed bottom-0 left-0 right-0 z-30 grid grid-cols-4 bg-white/95 backdrop-blur-lg border-t border-vf-line shadow-[0_-6px_20px_rgba(16,44,37,.08)] pb-safe lg:hidden" aria-label="Quick navigation">
+        <a href="{% url 'reviewers:dashboard' %}" class="flex flex-col items-center justify-center gap-0.5 py-2 text-[10px] font-extrabold {% if nav_active == 'dashboard' %}text-vf-primary{% else %}text-vf-muted{% endif %}">
+            <i class="bi bi-grid-1x2-fill text-lg leading-none"></i>Home
+        </a>
+        <a href="{% url 'campaigns:reviewer_list' %}" class="flex flex-col items-center justify-center gap-0.5 py-2 text-[10px] font-extrabold {% if nav_active == 'campaigns' %}text-vf-primary{% else %}text-vf-muted{% endif %}">
+            <i class="bi bi-search text-lg leading-none"></i>Tasks
+        </a>
+        <a href="{% url 'submissions:mine' %}" class="flex flex-col items-center justify-center gap-0.5 py-2 text-[10px] font-extrabold {% if nav_active == 'submissions' %}text-vf-primary{% else %}text-vf-muted{% endif %}">
+            <i class="bi bi-file-earmark-text text-lg leading-none"></i>Submissions
+        </a>
+        <a href="{% url 'withdrawals:wallet' %}" class="flex flex-col items-center justify-center gap-0.5 py-2 text-[10px] font-extrabold {% if nav_active == 'wallet' %}text-vf-primary{% else %}text-vf-muted{% endif %}">
+            <i class="bi bi-wallet2 text-lg leading-none"></i>Wallet
+        </a>
+    </nav>
     {% endif %}
+
 </div>
 {% endblock %}
 
 {% block extra_js %}
 <script>
-    (function () {
-        const sidebar = document.getElementById('dashSide');
-        const openBtn = document.getElementById('dashOpen');
-        const closeBtn = document.getElementById('dashClose');
-        const backdrop = document.getElementById('dashBackdrop');
-        if (!sidebar || !openBtn) return;
+    const sidebar  = document.getElementById('dashSide');
+    const backdrop = document.getElementById('dashBackdrop');
 
-        function openDrawer() {
-            sidebar.classList.add('open');
-            backdrop.classList.add('show');
-            openBtn.setAttribute('aria-expanded', 'true');
-            document.body.style.overflow = 'hidden';
-        }
-        function closeDrawer() {
-            sidebar.classList.remove('open');
-            backdrop.classList.remove('show');
-            openBtn.setAttribute('aria-expanded', 'false');
-            document.body.style.overflow = '';
-        }
-
-        openBtn.addEventListener('click', openDrawer);
-        if (closeBtn) closeBtn.addEventListener('click', closeDrawer);
-        if (backdrop) backdrop.addEventListener('click', closeDrawer);
-
-        // Close on Escape
-        document.addEventListener('keydown', function (e) {
-            if (e.key === 'Escape') closeDrawer();
-        });
-
-        // Auto-close when resizing to desktop
-        window.addEventListener('resize', function () {
-            if (window.innerWidth >= 992) closeDrawer();
-        });
-    })();
+    function openDrawer() {
+        sidebar.classList.remove('-translate-x-full');
+        backdrop.classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+    }
+    function closeDrawer() {
+        sidebar.classList.add('-translate-x-full');
+        backdrop.classList.add('hidden');
+        document.body.style.overflow = '';
+    }
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeDrawer(); });
+    window.addEventListener('resize', () => { if (window.innerWidth >= 1024) closeDrawer(); });
 </script>
 {% endblock %}

@@ -3,32 +3,74 @@
 {% block title %}Get Paid for Your Experiences · VerifiedFeedback{% endblock %}
 
 {% block content %}
-<section class="landing-hero py-4 py-md-5">
-    <div class="container">
-        <div class="row align-items-center g-4">
-            <div class="col-lg-7 py-3 py-lg-5">
-                <div class="page-kicker mb-3">Research that respects real life</div>
-                <h1 class="display-4 fw-bold mb-3 lh-sm">Your experience has value.</h1>
-                <p class="lead text-muted mb-4">
+<!-- HERO -->
+<section class="min-h-[calc(100vh-56px)] flex items-center bg-gradient-to-br from-vf-paper via-emerald-50 to-amber-50/40 py-12 md:py-0">
+    <div class="mx-auto max-w-7xl px-4 sm:px-6 w-full">
+        <div class="grid lg:grid-cols-2 gap-10 items-center">
+
+            <!-- Copy -->
+            <div class="order-2 lg:order-1">
+                <p class="mb-4 text-xs font-extrabold uppercase tracking-[.18em] text-vf-primary">Research that respects real life</p>
+                <h1 class="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-vf-ink leading-[1.1] mb-5">
+                    Your experience<br>has value.
+                </h1>
+                <p class="text-lg text-vf-muted leading-relaxed mb-8 max-w-lg">
                     Share honest feedback with trusted businesses and earn rewards for the things you already know firsthand.
                 </p>
-                <div class="d-grid d-sm-flex gap-3">
-                    <a href="{% url 'campaigns:reviewer_list' %}"
-                       class="btn btn-primary btn-lg px-4">
-                        <i class="bi bi-search me-2"></i>Find tasks
+                <div class="flex flex-col sm:flex-row gap-3">
+                    <a href="{% url 'campaigns:reviewer_list' %}" class="inline-flex items-center justify-center min-h-[52px] px-6 rounded-2xl bg-vf-primary text-white font-extrabold text-base shadow-lg shadow-vf-primary/25 hover:bg-vf-dark transition-all hover:-translate-y-0.5">
+                        <i class="bi bi-search mr-2"></i>Find tasks
                     </a>
-                    <a href="{% url 'accounts:signup_reviewer' %}" class="btn btn-outline-secondary btn-lg px-4">Join as a reviewer</a>
+                    <a href="{% url 'accounts:signup_reviewer' %}" class="inline-flex items-center justify-center min-h-[52px] px-6 rounded-2xl border-2 border-vf-line bg-white text-vf-ink font-extrabold text-base hover:border-vf-primary hover:bg-emerald-50 transition-all hover:-translate-y-0.5">
+                        Join as a reviewer
+                    </a>
                 </div>
-                <p class="text-muted small mt-3 mb-0">
-                    No fees. Clear tasks, honest ratings, dependable rewards.
-                </p>
+                <p class="text-vf-muted text-sm mt-4">No fees. Clear tasks, honest ratings, dependable rewards.</p>
             </div>
-            <div class="col-lg-5">
-                <div class="hero-task-board">
-                    <div class="hero-task-top"><span class="status-dot"></span><span>Live task preview</span><span class="ms-auto">Nairobi</span></div>
-                    <div class="hero-task-body"><div class="page-kicker mb-2">Coffee and dining</div><h2>Review your recent coffee shop visit</h2><p>Tell us what ordering, product quality, and service felt like in the real world.</p></div>
-                    <div class="hero-task-meta"><span><i class="bi bi-clock me-1"></i>15 min</span><strong>$5.00 reward</strong></div>
+
+            <!-- Task card preview -->
+            <div class="order-1 lg:order-2 flex justify-center">
+                <div class="w-full max-w-sm bg-white rounded-3xl border border-emerald-100 shadow-[0_24px_60px_rgba(23,52,45,.14)] lg:rotate-[1.5deg]">
+                    <div class="flex items-center gap-2 px-4 py-3 border-b border-vf-line text-vf-muted text-xs font-bold">
+                        <span class="w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_0_4px_#dff1e7]"></span>
+                        <span>Live task preview</span>
+                        <span class="ml-auto">Nairobi</span>
+                    </div>
+                    <div class="px-5 py-6">
+                        <p class="text-xs font-extrabold uppercase tracking-widest text-vf-primary mb-2">Coffee &amp; dining</p>
+                        <h2 class="text-xl font-extrabold text-vf-ink mb-3 leading-snug">Review your recent coffee shop visit</h2>
+                        <p class="text-sm text-vf-muted leading-relaxed">Tell us what ordering, product quality, and service felt like in the real world.</p>
+                    </div>
+                    <div class="flex items-center justify-between px-5 py-3 border-t border-vf-line text-sm font-bold">
+                        <span class="text-vf-muted"><i class="bi bi-clock mr-1"></i>15 min</span>
+                        <span class="text-vf-primary">$5.00 reward</span>
+                    </div>
                 </div>
+            </div>
+
+        </div>
+    </div>
+</section>
+
+<!-- TRUST BAR -->
+<section class="border-y border-vf-line bg-white py-8">
+    <div class="mx-auto max-w-7xl px-4 sm:px-6">
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
+            <div>
+                <div class="text-2xl font-extrabold text-vf-ink">100%</div>
+                <div class="text-xs text-vf-muted font-semibold mt-1">Verified reviewers</div>
+            </div>
+            <div>
+                <div class="text-2xl font-extrabold text-vf-ink">$0</div>
+                <div class="text-xs text-vf-muted font-semibold mt-1">Fees for reviewers</div>
+            </div>
+            <div>
+                <div class="text-2xl font-extrabold text-vf-ink">M-Pesa</div>
+                <div class="text-xs text-vf-muted font-semibold mt-1">Instant payouts</div>
+            </div>
+            <div>
+                <div class="text-2xl font-extrabold text-vf-ink">Kenya</div>
+                <div class="text-xs text-vf-muted font-semibold mt-1">Proudly local</div>
             </div>
         </div>
     </div>

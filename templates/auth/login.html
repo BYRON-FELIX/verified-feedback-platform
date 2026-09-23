@@ -3,42 +3,40 @@
 {% block title %}Log in · VerifiedFeedback{% endblock %}
 
 {% block content %}
-<div class="auth-page container py-5">
-    <div class="row justify-content-center">
-        <div class="col-12 col-sm-10 col-md-5">
-            <div class="auth-card card">
-                <div class="card-body p-4">
-                    <div class="page-kicker mb-2">Welcome back</div>
-                    <h1 class="h3 mb-2">Sign in to your workspace</h1>
-                    <p class="text-muted mb-4">Pick up where you left off.</p>
+<div class="min-h-[calc(100vh-56px)] flex items-center justify-center px-4 py-10 bg-gradient-to-br from-vf-paper to-emerald-50/60">
+    <div class="w-full max-w-[440px]">
+        <div class="bg-white rounded-3xl shadow-card border border-vf-line p-6 sm:p-8">
+            <p class="text-xs font-extrabold uppercase tracking-[.18em] text-vf-primary mb-2">Welcome back</p>
+            <h1 class="text-2xl font-extrabold tracking-tight text-vf-ink mb-1">Sign in to your workspace</h1>
+            <p class="text-sm text-vf-muted mb-6">Pick up where you left off.</p>
 
-                    {% if form.errors %}
-                        <div class="alert alert-danger small">
-                            Your email and password didn't match. Please try again.
-                        </div>
-                    {% endif %}
+            {% if form.errors %}
+            <div class="flex items-start gap-2.5 bg-red-50 border border-red-200 rounded-xl px-4 py-3 text-sm text-red-700 font-semibold mb-5">
+                <i class="bi bi-exclamation-circle-fill shrink-0 mt-0.5"></i>
+                Your email and password didn't match. Please try again.
+            </div>
+            {% endif %}
 
-                    <form method="post" novalidate>
-                        {% csrf_token %}
-                        <div class="mb-3">
-                            <label class="form-label">Email</label>
-                            {{ form.username }}
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Password</label>
-                            {{ form.password }}
-                        </div>
-                        <button type="submit" class="btn btn-primary w-100"><i class="bi bi-arrow-right me-2"></i>Continue</button>
-                    </form>
-
-                    <hr class="my-4">
-
-                    <div class="text-center small">
-                        New here?
-                        <a href="{% url 'accounts:signup_reviewer' %}">Join as reviewer</a> ·
-                        <a href="{% url 'accounts:signup_business' %}">Register a business</a>
-                    </div>
+            <form method="post" novalidate class="space-y-4">
+                {% csrf_token %}
+                <div>
+                    <label class="block text-sm font-bold text-vf-ink mb-1.5">Email</label>
+                    {{ form.username }}
                 </div>
+                <div>
+                    <label class="block text-sm font-bold text-vf-ink mb-1.5">Password</label>
+                    {{ form.password }}
+                </div>
+                <button type="submit" class="w-full inline-flex items-center justify-center min-h-[48px] rounded-xl bg-vf-primary text-white font-extrabold text-base shadow-md shadow-vf-primary/20 hover:bg-vf-dark transition-all hover:-translate-y-0.5 mt-2">
+                    <i class="bi bi-arrow-right mr-2"></i>Continue
+                </button>
+            </form>
+
+            <div class="mt-6 pt-5 border-t border-vf-line text-center text-sm text-vf-muted">
+                New here?
+                <a href="{% url 'accounts:signup_reviewer' %}" class="font-bold text-vf-primary hover:underline ml-1">Join as reviewer</a>
+                <span class="mx-1">·</span>
+                <a href="{% url 'accounts:signup_business' %}" class="font-bold text-vf-primary hover:underline">Register a business</a>
             </div>
         </div>
     </div>

@@ -3,86 +3,77 @@
 {% block title %}Join as a reviewer · VerifiedFeedback{% endblock %}
 
 {% block content %}
-<div class="auth-page container py-5">
-    <div class="row justify-content-center">
-        <div class="col-md-6">
-            <div class="auth-card card">
-                <div class="card-body p-4">
-                    <div class="page-kicker mb-2">Start earning</div>
-                    <h1 class="h3 mb-1">Join as a reviewer</h1>
-                    <p class="text-muted small mb-4">
-                        Earn rewards for sharing genuine feedback on real experiences.
-                    </p>
+<div class="min-h-[calc(100vh-56px)] flex items-center justify-center px-4 py-10 bg-gradient-to-br from-vf-paper to-emerald-50/60">
+    <div class="w-full max-w-[520px]">
+        <div class="bg-white rounded-3xl shadow-card border border-vf-line p-6 sm:p-8">
+            <p class="text-xs font-extrabold uppercase tracking-[.18em] text-vf-primary mb-2">Start earning</p>
+            <h1 class="text-2xl font-extrabold tracking-tight text-vf-ink mb-1">Join as a reviewer</h1>
+            <p class="text-sm text-vf-muted mb-6">Earn rewards for sharing genuine feedback on real experiences.</p>
 
-                    <form method="post" novalidate>
-                        {% csrf_token %}
-                        <div class="row g-3">
-                            <div class="col-md-6">
-                                <label class="form-label">First name</label>
-                                {{ form.first_name }}
-                                {% if form.first_name.errors %}
-                                    <div class="text-danger small">{{ form.first_name.errors.0 }}</div>
-                                {% endif %}
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label">Last name</label>
-                                {{ form.last_name }}
-                                {% if form.last_name.errors %}
-                                    <div class="text-danger small">{{ form.last_name.errors.0 }}</div>
-                                {% endif %}
-                            </div>
-                            <div class="col-12">
-                                <label class="form-label">Email</label>
-                                {{ form.email }}
-                                {% if form.email.errors %}
-                                    <div class="text-danger small">{{ form.email.errors.0 }}</div>
-                                {% endif %}
-                            </div>
-                            <div class="col-12">
-                                <label class="form-label">Phone number <span class="text-muted">(optional)</span></label>
-                                {{ form.phone_number }}
-                                <div class="form-text">{{ form.phone_number.help_text }}</div>
-                                {% if form.phone_number.errors %}
-                                    <div class="text-danger small">{{ form.phone_number.errors.0 }}</div>
-                                {% endif %}
-                            </div>
-                            <div class="col-12">
-                                <label class="form-label">Country</label>
-                                {{ form.country }}
-                                <div class="form-text">{{ form.country.help_text }}</div>
-                                {% if form.country.errors %}
-                                    <div class="text-danger small">{{ form.country.errors.0 }}</div>
-                                {% endif %}
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label">Password</label>
-                                {{ form.password1 }}
-                                {% if form.password1.errors %}
-                                    <div class="text-danger small">{{ form.password1.errors.0 }}</div>
-                                {% endif %}
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label">Confirm password</label>
-                                {{ form.password2 }}
-                                {% if form.password2.errors %}
-                                    <div class="text-danger small">{{ form.password2.errors.0 }}</div>
-                                {% endif %}
-                            </div>
-                        </div>
+            <form method="post" novalidate class="space-y-4">
+                {% csrf_token %}
 
-                        {% if form.non_field_errors %}
-                            <div class="alert alert-danger mt-3 small">{{ form.non_field_errors.0 }}</div>
-                        {% endif %}
-
-                        <button type="submit" class="btn btn-primary w-100 mt-4">
-                            Create reviewer account
-                        </button>
-                    </form>
-
-                    <div class="text-center small mt-4">
-                        Already have an account? <a href="{% url 'accounts:login' %}">Log in</a>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-sm font-bold text-vf-ink mb-1.5">First name</label>
+                        {{ form.first_name }}
+                        {% if form.first_name.errors %}<p class="text-red-600 text-xs mt-1">{{ form.first_name.errors.0 }}</p>{% endif %}
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-vf-ink mb-1.5">Last name</label>
+                        {{ form.last_name }}
+                        {% if form.last_name.errors %}<p class="text-red-600 text-xs mt-1">{{ form.last_name.errors.0 }}</p>{% endif %}
                     </div>
                 </div>
+
+                <div>
+                    <label class="block text-sm font-bold text-vf-ink mb-1.5">Email</label>
+                    {{ form.email }}
+                    {% if form.email.errors %}<p class="text-red-600 text-xs mt-1">{{ form.email.errors.0 }}</p>{% endif %}
+                </div>
+
+                <div>
+                    <label class="block text-sm font-bold text-vf-ink mb-1.5">Phone number <span class="text-vf-muted font-normal">(optional)</span></label>
+                    {{ form.phone_number }}
+                    {% if form.phone_number.help_text %}<p class="text-xs text-vf-muted mt-1">{{ form.phone_number.help_text }}</p>{% endif %}
+                    {% if form.phone_number.errors %}<p class="text-red-600 text-xs mt-1">{{ form.phone_number.errors.0 }}</p>{% endif %}
+                </div>
+
+                <div>
+                    <label class="block text-sm font-bold text-vf-ink mb-1.5">Country</label>
+                    {{ form.country }}
+                    {% if form.country.help_text %}<p class="text-xs text-vf-muted mt-1">{{ form.country.help_text }}</p>{% endif %}
+                    {% if form.country.errors %}<p class="text-red-600 text-xs mt-1">{{ form.country.errors.0 }}</p>{% endif %}
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-sm font-bold text-vf-ink mb-1.5">Password</label>
+                        {{ form.password1 }}
+                        {% if form.password1.errors %}<p class="text-red-600 text-xs mt-1">{{ form.password1.errors.0 }}</p>{% endif %}
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-vf-ink mb-1.5">Confirm password</label>
+                        {{ form.password2 }}
+                        {% if form.password2.errors %}<p class="text-red-600 text-xs mt-1">{{ form.password2.errors.0 }}</p>{% endif %}
+                    </div>
+                </div>
+
+                {% if form.non_field_errors %}
+                <div class="flex items-start gap-2.5 bg-red-50 border border-red-200 rounded-xl px-4 py-3 text-sm text-red-700 font-semibold">
+                    <i class="bi bi-exclamation-circle-fill shrink-0 mt-0.5"></i>
+                    {{ form.non_field_errors.0 }}
+                </div>
+                {% endif %}
+
+                <button type="submit" class="w-full inline-flex items-center justify-center min-h-[48px] rounded-xl bg-vf-primary text-white font-extrabold text-base shadow-md shadow-vf-primary/20 hover:bg-vf-dark transition-all hover:-translate-y-0.5 mt-2">
+                    Create reviewer account
+                </button>
+            </form>
+
+            <div class="mt-5 pt-5 border-t border-vf-line text-center text-sm text-vf-muted">
+                Already have an account?
+                <a href="{% url 'accounts:login' %}" class="font-bold text-vf-primary hover:underline ml-1">Log in</a>
             </div>
         </div>
     </div>

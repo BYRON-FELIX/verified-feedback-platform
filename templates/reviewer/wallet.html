@@ -1,87 +1,96 @@
 {% extends "layouts/dashboard.html" %}
 
 {% block title %}Wallet · VerifiedFeedback{% endblock %}
+
 {% block heading_actions %}
-    <a href="{% url 'withdrawals:request' %}" class="btn btn-primary">
-        <i class="bi bi-cash-coin me-2"></i> Withdraw funds
-    </a>
+<a href="{% url 'withdrawals:request' %}" class="inline-flex items-center justify-center min-h-[40px] px-4 rounded-xl bg-vf-primary text-white text-sm font-extrabold shadow-md shadow-vf-primary/20 hover:bg-vf-dark transition">
+    <i class="bi bi-cash-coin mr-2"></i>Withdraw funds
+</a>
 {% endblock %}
 
 {% block dashboard_content %}
-<div class="page-intro mb-4"><div><div class="page-kicker">Your earnings</div><h1 class="section-heading">Wallet</h1><p class="text-muted mb-0">Track rewards and move your available balance when you're ready.</p></div></div>
-<div class="row g-3 mb-4">
-    <div class="col-12 col-md-4">
-        <div class="card metric-card h-100">
-            <div class="card-body">
-                <div class="text-muted small">Available balance</div>
-                <div class="fs-3 fw-bold text-break">${{ wallet.available_balance }}</div>
-            </div>
-        </div>
+<div class="max-w-4xl mx-auto">
+    <div class="mb-5">
+        <p class="text-xs font-extrabold uppercase tracking-[.18em] text-vf-primary mb-1">Your earnings</p>
+        <h1 class="text-2xl font-extrabold tracking-tight text-vf-ink">Wallet</h1>
+        <p class="text-sm text-vf-muted">Track rewards and move your available balance when you're ready.</p>
     </div>
-    <div class="col-6 col-md-4">
-        <div class="card metric-card h-100">
-            <div class="card-body">
-                <div class="text-muted small">Lifetime earned</div>
-                <div class="fs-5 fw-bold text-break">${{ wallet.lifetime_earnings }}</div>
-            </div>
-        </div>
-    </div>
-    <div class="col-6 col-md-4">
-        <div class="card metric-card h-100">
-            <div class="card-body">
-                <div class="text-muted small">Withdrawn</div>
-                <div class="fs-5 fw-bold text-break">${{ wallet.lifetime_withdrawn }}</div>
-            </div>
-        </div>
-    </div>
-</div>
 
-<div class="d-flex justify-content-between align-items-center mb-3">
-    <h6 class="mb-0">Recent transactions</h6>
-    <a href="{% url 'withdrawals:list' %}" class="btn btn-outline-secondary btn-sm">History</a>
-</div>
+    <!-- Balance cards -->
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
+        <div class="bg-emerald-900 text-white rounded-2xl p-5 relative overflow-hidden">
+            <div class="text-xs font-extrabold uppercase tracking-widest text-emerald-200 mb-2">Available balance</div>
+            <div class="text-3xl font-extrabold tracking-tight">${{ wallet.available_balance }}</div>
+            <a href="{% url 'withdrawals:request' %}" class="mt-4 inline-flex items-center text-xs font-bold text-emerald-300 hover:text-white transition">
+                Withdraw <i class="bi bi-arrow-right ml-1"></i>
+            </a>
+        </div>
+        <div class="bg-white rounded-2xl border border-vf-line shadow-card p-5">
+            <div class="grid place-items-center w-9 h-9 rounded-xl bg-emerald-100 text-emerald-800 mb-3"><i class="bi bi-graph-up-arrow"></i></div>
+            <div class="text-xs font-extrabold uppercase tracking-wide text-vf-muted mb-1">Lifetime earned</div>
+            <div class="text-2xl font-extrabold text-vf-ink">${{ wallet.lifetime_earnings }}</div>
+        </div>
+        <div class="bg-white rounded-2xl border border-vf-line shadow-card p-5">
+            <div class="grid place-items-center w-9 h-9 rounded-xl bg-sky-100 text-sky-800 mb-3"><i class="bi bi-arrow-up-circle"></i></div>
+            <div class="text-xs font-extrabold uppercase tracking-wide text-vf-muted mb-1">Withdrawn</div>
+            <div class="text-2xl font-extrabold text-vf-ink">${{ wallet.lifetime_withdrawn }}</div>
+        </div>
+    </div>
 
-<div class="card">
-    <div class="table-responsive">
-        <table class="table table-hover align-middle mb-0">
-            <thead class="table-light">
-                <tr>
-                    <th>Date</th>
-                    <th>Description</th>
-                    <th class="text-end">Amount</th>
-                    <th class="text-end d-none d-md-table-cell">Balance</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for tx in transactions %}
-                <tr>
-                    <td>
-                        <small class="text-muted d-block d-md-none">{{ tx.created_at|date:"M d" }}</small>
-                        <small class="text-muted d-none d-md-block">{{ tx.created_at|date:"M d, Y H:i" }}</small>
-                    </td>
-                    <td>
-                        <div class="text-break">{{ tx.get_transaction_type_display }}</div>
-                    </td>
-                    <td class="text-end {% if tx.amount >= 0 %}text-success{% else %}text-danger{% endif %} fw-semibold">
-                        {% if tx.amount >= 0 %}+{% endif %}${{ tx.amount }}
-                    </td>
-                    <td class="text-end d-none d-md-table-cell">
-                        <small class="text-muted">${{ tx.balance_after }}</small>
-                    </td>
-                </tr>
-                {% empty %}
-                <tr>
-                    <td colspan="4">
-                        <div class="empty-state">
-                            <i class="bi bi-receipt"></i>
-                            <h6 class="mt-2">No transactions yet</h6>
-                            <p class="text-muted small mb-0">Complete a task to start earning.</p>
-                        </div>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+    <!-- Transactions -->
+    <div class="flex items-center justify-between gap-4 mb-3">
+        <h2 class="font-extrabold text-vf-ink">Recent transactions</h2>
+        <a href="{% url 'withdrawals:list' %}" class="text-sm font-bold text-vf-primary hover:underline">Full history</a>
+    </div>
+
+    <div class="bg-white rounded-2xl border border-vf-line shadow-card overflow-hidden">
+        {% if transactions %}
+        <!-- Mobile: list cards -->
+        <div class="divide-y divide-vf-line sm:hidden">
+            {% for tx in transactions %}
+            <div class="px-4 py-3 flex items-center justify-between gap-3">
+                <div class="min-w-0">
+                    <div class="text-sm font-bold text-vf-ink truncate">{{ tx.get_transaction_type_display }}</div>
+                    <div class="text-xs text-vf-muted">{{ tx.created_at|date:"M d, Y" }}</div>
+                </div>
+                <div class="text-sm font-extrabold shrink-0 {% if tx.amount >= 0 %}text-emerald-700{% else %}text-red-600{% endif %}">
+                    {% if tx.amount >= 0 %}+{% endif %}${{ tx.amount }}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        <!-- Desktop: table -->
+        <div class="hidden sm:block overflow-x-auto">
+            <table class="w-full text-sm">
+                <thead class="bg-slate-50 border-b border-vf-line">
+                    <tr class="text-xs font-extrabold uppercase tracking-wide text-vf-muted">
+                        <th class="px-5 py-3 text-left">Date</th>
+                        <th class="px-5 py-3 text-left">Description</th>
+                        <th class="px-5 py-3 text-right">Amount</th>
+                        <th class="px-5 py-3 text-right">Balance after</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-vf-line">
+                    {% for tx in transactions %}
+                    <tr class="hover:bg-slate-50/60 transition">
+                        <td class="px-5 py-3 text-vf-muted whitespace-nowrap">{{ tx.created_at|date:"M d, Y H:i" }}</td>
+                        <td class="px-5 py-3 text-vf-ink font-semibold">{{ tx.get_transaction_type_display }}</td>
+                        <td class="px-5 py-3 text-right font-extrabold {% if tx.amount >= 0 %}text-emerald-700{% else %}text-red-600{% endif %}">
+                            {% if tx.amount >= 0 %}+{% endif %}${{ tx.amount }}
+                        </td>
+                        <td class="px-5 py-3 text-right text-vf-muted">${{ tx.balance_after }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-16 px-6">
+            <span class="mx-auto grid place-items-center w-14 h-14 rounded-2xl bg-slate-100 text-slate-500 text-2xl mb-4"><i class="bi bi-receipt"></i></span>
+            <h3 class="font-extrabold text-vf-ink text-base mb-2">No transactions yet</h3>
+            <p class="text-sm text-vf-muted">Complete a task to start earning.</p>
+        </div>
+        {% endif %}
     </div>
 </div>
 {% endblock %}

@@ -12,11 +12,6 @@
                     Minimum: <strong>${{ min_amount }}</strong>
                 </p>
 
-                <div class="alert alert-info small">
-                    Select your withdrawal method below. M-Pesa requires a one-time
-                    account verification payment of <strong>${{ mpesa_fee }}.</strong>
-                    <p>PayPal and card withdrawals do not require this fee.</p>
-                </div>
                 {% if not user_country_code %}
                     <div class="alert alert-warning small">
                         We couldn't determine your country. Please update your profile first.

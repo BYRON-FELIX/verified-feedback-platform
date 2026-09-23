@@ -1,86 +1,89 @@
 {% extends "layouts/dashboard.html" %}
 
 {% block title %}Find Tasks · VerifiedFeedback{% endblock %}
+
 {% block dashboard_content %}
-<div class="page-intro mb-4"><div><div class="page-kicker">Explore opportunities</div><h1 class="section-heading">Find tasks worth your time.</h1><p class="text-muted mb-0">Choose a campaign that matches your experience, location, and interests.</p></div></div>
-<form method="get" class="card filter-panel mb-4">
-    <div class="card-body">
-        <div class="row g-2">
-            <div class="col-12 col-md-5">
-                <input type="text" name="q" value="{{ search|default:'' }}" class="form-control"
-                       placeholder="Search campaigns...">
-            </div>
-            <div class="col-8 col-md-4">
-                <select name="category" class="form-select" aria-label="Filter by category">
-                    <option value="">All categories</option>
-                    {% for cat in categories %}
-                        <option value="{{ cat.id }}" {% if selected_category == cat.id|stringformat:"s" %}selected{% endif %}>
-                            {{ cat.name }}
-                        </option>
-                    {% endfor %}
-                </select>
-            </div>
-            <div class="col-4 col-md-3">
-                <button type="submit" class="btn btn-primary w-100"><i class="bi bi-funnel me-2"></i>Filter</button>
-            </div>
-        </div>
+<div class="max-w-6xl mx-auto">
+    <div class="mb-5">
+        <p class="text-xs font-extrabold uppercase tracking-[.18em] text-vf-primary mb-1">Explore opportunities</p>
+        <h1 class="text-2xl font-extrabold tracking-tight text-vf-ink mb-1">Find tasks worth your time.</h1>
+        <p class="text-sm text-vf-muted">Choose a campaign that matches your experience, location, and interests.</p>
     </div>
-</form>
 
-{% if campaigns %}
-    <div class="row g-3">
+    <!-- Filter panel -->
+    <form method="get" class="bg-white rounded-2xl border border-vf-line shadow-card p-4 mb-5">
+        <div class="flex flex-col sm:flex-row gap-3">
+            <input type="text" name="q" value="{{ search|default:'' }}" placeholder="Search campaigns…"
+                   class="flex-1 min-h-[44px]">
+            <select name="category" aria-label="Filter by category" class="sm:w-52 min-h-[44px]">
+                <option value="">All categories</option>
+                {% for cat in categories %}
+                    <option value="{{ cat.id }}" {% if selected_category == cat.id|stringformat:"s" %}selected{% endif %}>{{ cat.name }}</option>
+                {% endfor %}
+            </select>
+            <button type="submit" class="inline-flex items-center justify-center min-h-[44px] px-5 rounded-xl bg-vf-primary text-white font-extrabold text-sm shadow-md shadow-vf-primary/20 hover:bg-vf-dark transition shrink-0">
+                <i class="bi bi-funnel mr-2"></i>Filter
+            </button>
+        </div>
+    </form>
+
+    {% if surveys_locked %}
+    <div class="flex flex-col sm:flex-row items-start sm:items-center gap-3 bg-amber-50 border border-amber-200 rounded-2xl px-4 py-3 mb-5 text-sm text-amber-900">
+        <i class="bi bi-lock-fill text-amber-600 text-lg shrink-0"></i>
+        <div><strong>Survey tasks locked.</strong> Verify your account to unlock survey-type campaigns.</div>
+    </div>
+    {% endif %}
+
+    {% if campaigns %}
+    <div class="grid sm:grid-cols-2 xl:grid-cols-3 gap-4">
         {% for c in campaigns %}
-        <div class="col-12 col-md-6">
-            <div class="card task-card h-100">
-                <div class="card-body d-flex flex-column">
-                    <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
-                        <span class="badge bg-secondary-subtle text-secondary-emphasis">
-                            {{ c.get_campaign_type_display }}
-                        </span>
-                        {% if c.county %}
-                            <small class="text-muted text-end">
-                                <i class="bi bi-geo-alt"></i> {{ c.county.name }}
-                            </small>
-                        {% endif %}
-                    </div>
+        <div class="bg-white rounded-2xl border border-vf-line shadow-card flex flex-col hover:shadow-hover hover:-translate-y-0.5 transition-all duration-200">
+            <div class="p-4 flex flex-col flex-1">
+                <div class="flex items-start justify-between gap-2 mb-3">
+                    <span class="inline-flex items-center px-2.5 py-1 rounded-full bg-slate-100 text-slate-700 text-xs font-bold">
+                        {{ c.get_campaign_type_display }}
+                    </span>
+                    {% if c.county %}
+                    <span class="text-xs text-vf-muted flex items-center gap-1 shrink-0">
+                        <i class="bi bi-geo-alt"></i>{{ c.county.name }}
+                    </span>
+                    {% endif %}
+                </div>
 
-                    <h6 class="mb-1 text-break">{{ c.title }}</h6>
-                    <small class="text-muted mb-2">{{ c.business.name }}</small>
-                    <p class="text-muted small flex-grow-1 mb-3">
-                        {{ c.description|truncatewords:18 }}
-                    </p>
+                <h3 class="font-extrabold text-vf-ink text-base leading-snug mb-1">{{ c.title }}</h3>
+                <p class="text-xs text-vf-muted mb-2">{{ c.business.name }}</p>
+                <p class="text-sm text-vf-muted leading-relaxed flex-1 mb-4">{{ c.description|truncatewords:18 }}</p>
 
-                    <div class="d-flex flex-wrap gap-2 mb-3">
-                        <span class="badge bg-success-subtle text-success-emphasis py-2 px-3">
-                            ${{ c.reward_amount }}
-                        </span>
-                        <span class="badge bg-light text-dark border">
-                            <i class="bi bi-clock"></i> ~{{ c.estimated_minutes }} min
-                        </span>
-                        <span class="badge bg-light text-dark border">
-                            {{ c.slots_remaining }} slot{{ c.slots_remaining|pluralize }}
-                        </span>
-                    </div>
+                <div class="flex flex-wrap gap-2 mb-4">
+                    <span class="inline-flex items-center px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 text-xs font-extrabold">
+                        ${{ c.reward_amount }}
+                    </span>
+                    <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-slate-100 text-slate-700 text-xs font-bold">
+                        <i class="bi bi-clock"></i>~{{ c.estimated_minutes }} min
+                    </span>
+                    <span class="inline-flex items-center px-2.5 py-1 rounded-full bg-slate-100 text-slate-700 text-xs font-bold">
+                        {{ c.slots_remaining }} slot{{ c.slots_remaining|pluralize }}
+                    </span>
+                </div>
 
-                    <div class="d-flex justify-content-between align-items-center mt-auto pt-2 border-top">
-                        <small class="text-muted">Ends {{ c.end_date }}</small>
-                        <a href="{% url 'campaigns:reviewer_detail' c.slug %}"
-                           class="btn btn-sm btn-dark">
-                            View details
-                        </a>
-                    </div>
+                <div class="flex items-center justify-between pt-3 border-t border-vf-line">
+                    <span class="text-xs text-vf-muted">Ends {{ c.end_date }}</span>
+                    <a href="{% url 'campaigns:reviewer_detail' c.slug %}"
+                       class="inline-flex items-center justify-center min-h-[36px] px-4 rounded-xl bg-vf-ink text-white text-xs font-extrabold hover:bg-vf-primary transition">
+                        View details
+                    </a>
                 </div>
             </div>
         </div>
         {% endfor %}
     </div>
-{% else %}
-    <div class="card border-0 shadow-sm">
-        <div class="card-body empty-state">
-            <i class="bi bi-search"></i>
-            <h5>No campaigns match your filters</h5>
-            <p class="text-muted">Try clearing the filters or check back later.</p>
-        </div>
+
+    {% else %}
+    <div class="bg-white rounded-2xl border border-vf-line shadow-card text-center py-16 px-6">
+        <span class="mx-auto grid place-items-center w-14 h-14 rounded-2xl bg-slate-100 text-slate-500 text-2xl mb-4"><i class="bi bi-search"></i></span>
+        <h3 class="font-extrabold text-vf-ink text-lg mb-2">No campaigns match your filters</h3>
+        <p class="text-sm text-vf-muted">Try clearing the filters or check back later.</p>
     </div>
-{% endif %}
+    {% endif %}
+</div>
 {% endblock %}

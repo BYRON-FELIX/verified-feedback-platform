@@ -1,6 +1,6 @@
 {% load static %}
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="scroll-smooth">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,111 +8,174 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <script src="https://cdn.tailwindcss.com"></script>
     <script>
-        tailwind = {
-            corePlugins: {
-                preflight: false
-            },
+        tailwind.config = {
             theme: {
                 extend: {
                     colors: {
                         vf: {
-                            ink: "#102c25",
-                            primary: "#13795b",
-                            "primary-dark": "#0b5b43",
-                            paper: "#f7faf8"
+                            ink:     '#102c25',
+                            muted:   '#667a73',
+                            primary: '#13795b',
+                            dark:    '#0b5b43',
+                            accent:  '#f1b65a',
+                            coral:   '#d96855',
+                            paper:   '#f7faf8',
+                            line:    '#dbe8e1',
                         }
                     },
                     fontFamily: {
-                        sans: ["Manrope", "Avenir Next", "sans-serif"]
+                        sans: ['Manrope', 'Avenir Next', 'sans-serif'],
+                    },
+                    borderRadius: {
+                        '2xl': '1rem',
+                        '3xl': '1.25rem',
+                    },
+                    boxShadow: {
+                        card:  '0 8px 24px rgba(16,44,37,.07)',
+                        hover: '0 16px 40px rgba(16,44,37,.12)',
                     }
                 }
             }
         };
     </script>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
-    <link rel="stylesheet" href="{% static 'base.css' %}">
-    <link rel="stylesheet" href="{% static 'responsive.css' %}">
+    <style>
+        body { font-family: 'Manrope', 'Avenir Next', sans-serif; -webkit-font-smoothing: antialiased; }
+        /* form fields from Django get a standard look */
+        input:not([type=checkbox]):not([type=radio]):not([type=submit]):not([type=button]),
+        select, textarea {
+            display: block; width: 100%;
+            padding: .6rem .85rem;
+            border: 2px solid #a8c5b7;
+            border-radius: .75rem;
+            background: #fff;
+            font-size: 1rem;
+            font-family: inherit;
+            color: #102c25;
+            outline: none;
+            transition: border-color .15s;
+        }
+        input:not([type=checkbox]):not([type=radio]):not([type=submit]):not([type=button]):focus,
+        select:focus, textarea:focus {
+            border-color: #13795b;
+            box-shadow: 0 0 0 3px rgba(19,121,91,.15);
+        }
+        input:not([type=checkbox]):not([type=radio]):not([type=submit]):not([type=button]):hover,
+        select:hover, textarea:hover { border-color: #78a993; }
+        textarea { min-height: 7rem; resize: vertical; }
+        select { appearance: auto; }
+        input[type=checkbox], input[type=radio] { accent-color: #13795b; }
+        /* safe-area bottom for iOS */
+        .pb-safe { padding-bottom: env(safe-area-inset-bottom, 0); }
+    </style>
     {% block extra_css %}{% endblock %}
 </head>
-<body>
-    <nav class="site-nav navbar navbar-expand-lg sticky-top">
-        <div class="container">
-            <a class="navbar-brand" href="/">
-                <span class="brand-mark"><i class="bi bi-check2"></i></span>
-                <span>Verified<span class="brand-muted">Feedback</span></span>
-            </a>
-            <button class="navbar-toggler border-0 shadow-none" type="button" data-bs-toggle="collapse" data-bs-target="#navMain"
-                    aria-controls="navMain" aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navMain">
-                <ul class="navbar-nav ms-auto align-items-lg-center gap-lg-1">
+<body class="bg-vf-paper text-vf-ink antialiased overflow-x-hidden">
+
+    <!-- ── NAVBAR ── -->
+    <header class="sticky top-0 z-50 bg-white/90 backdrop-blur-lg border-b border-vf-line">
+        <div class="mx-auto max-w-7xl px-4 sm:px-6">
+            <div class="flex h-14 items-center justify-between gap-4">
+
+                <!-- Brand -->
+                <a href="/" class="flex items-center gap-2 font-extrabold text-vf-ink text-[1.05rem] shrink-0">
+                    <span class="grid place-items-center w-8 h-8 rounded-[10px] bg-gradient-to-br from-vf-primary to-vf-dark text-white shadow-md shadow-vf-primary/30">
+                        <i class="bi bi-check2 text-sm leading-none"></i>
+                    </span>
+                    Verified<span class="text-vf-primary">Feedback</span>
+                </a>
+
+                <!-- Desktop nav -->
+                <nav class="hidden md:flex items-center gap-1 ml-auto">
                     {% if user.is_authenticated %}
                         {% if user.role == "REVIEWER" %}
-                            <li class="nav-item"><a class="nav-link" href="{% url 'campaigns:reviewer_list' %}"><i class="bi bi-search me-2"></i>Find tasks</a></li>
+                            <a href="{% url 'campaigns:reviewer_list' %}" class="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-bold text-vf-muted hover:text-vf-primary hover:bg-emerald-50 transition">
+                                <i class="bi bi-search"></i>Find tasks
+                            </a>
                         {% elif user.role == "BUSINESS" %}
-                            <li class="nav-item"><a class="nav-link" href="{% url 'campaigns:business_list' %}"><i class="bi bi-megaphone me-2"></i>Campaigns</a></li>
+                            <a href="{% url 'campaigns:business_list' %}" class="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-bold text-vf-muted hover:text-vf-primary hover:bg-emerald-50 transition">
+                                <i class="bi bi-megaphone"></i>Campaigns
+                            </a>
                         {% endif %}
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle account-trigger" href="#" data-bs-toggle="dropdown"
-                               role="button" aria-expanded="false">
-                                <i class="bi bi-person-circle d-lg-none me-2"></i>{{ user.display_name }}
-                            </a>
-                            <ul class="dropdown-menu dropdown-menu-end">
-                                <li>
-                                    <span class="dropdown-item-text small text-muted">
-                                        Signed in as {{ user.role }}
-                                    </span>
-                                </li>
-                                <li><hr class="dropdown-divider"></li>
+
+                        <!-- Account dropdown -->
+                        <div class="relative" id="accountMenu">
+                            <button onclick="document.getElementById('accountDropdown').classList.toggle('hidden')"
+                                    class="flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-extrabold text-vf-ink hover:bg-slate-100 transition ml-1">
+                                <span class="grid place-items-center w-7 h-7 rounded-full bg-emerald-100 text-emerald-800 text-xs font-extrabold">
+                                    {{ user.display_name|slice:":1"|upper }}
+                                </span>
+                                {{ user.display_name }}
+                                <i class="bi bi-chevron-down text-xs text-vf-muted"></i>
+                            </button>
+                            <div id="accountDropdown" class="hidden absolute right-0 mt-2 w-52 bg-white rounded-2xl shadow-hover border border-vf-line py-1 z-50">
+                                <span class="block px-4 py-2 text-xs text-vf-muted font-bold uppercase tracking-widest">Signed in as {{ user.role }}</span>
+                                <hr class="border-vf-line my-1">
                                 {% if user.role == "ADMIN" %}
-                                    <li><a class="dropdown-item" href="/django-admin/">
-                                        <i class="bi bi-shield-lock me-2"></i>Admin panel
-                                    </a></li>
+                                    <a href="/django-admin/" class="flex items-center gap-2 px-4 py-2.5 text-sm font-semibold hover:bg-slate-50">
+                                        <i class="bi bi-shield-lock text-vf-muted"></i>Admin panel
+                                    </a>
                                 {% endif %}
-                                <li><a class="dropdown-item" href="{% url 'dashboard' %}">
-                                    <i class="bi bi-speedometer2 me-2"></i>Dashboard
-                                </a></li>
-                                <li>
-                                    <form method="post" action="{% url 'accounts:logout' %}">
-                                        {% csrf_token %}
-                                        <button type="submit" class="dropdown-item">
-                                            <i class="bi bi-box-arrow-right me-2"></i>Log out
-                                        </button>
-                                    </form>
-                                </li>
-                            </ul>
-                        </li>
+                                <a href="{% url 'dashboard' %}" class="flex items-center gap-2 px-4 py-2.5 text-sm font-semibold hover:bg-slate-50">
+                                    <i class="bi bi-speedometer2 text-vf-muted"></i>Dashboard
+                                </a>
+                                <hr class="border-vf-line my-1">
+                                <form method="post" action="{% url 'accounts:logout' %}">
+                                    {% csrf_token %}
+                                    <button type="submit" class="flex items-center gap-2 w-full px-4 py-2.5 text-sm font-semibold text-red-600 hover:bg-red-50">
+                                        <i class="bi bi-box-arrow-right"></i>Log out
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+
                     {% else %}
-                        <li class="nav-item">
-                            <a class="nav-link" href="{% url 'accounts:login' %}">Log in</a>
-                        </li>
-                        <li class="nav-item ms-lg-2 my-2 my-lg-0">
-                            <a class="btn btn-primary w-100 w-lg-auto px-3"
-                               href="{% url 'accounts:signup_reviewer' %}">
-                                Sign up
-                            </a>
-                        </li>
+                        <a href="{% url 'accounts:login' %}" class="px-3 py-2 text-sm font-bold text-vf-muted hover:text-vf-primary transition">Log in</a>
+                        <a href="{% url 'accounts:signup_reviewer' %}"
+                           class="ml-1 inline-flex items-center justify-center min-h-[38px] px-4 rounded-xl bg-vf-primary text-white text-sm font-extrabold shadow-md shadow-emerald-700/25 hover:bg-vf-dark hover:-translate-y-px transition-all">
+                            Sign up
+                        </a>
                     {% endif %}
-                </ul>
+                </nav>
+
+                <!-- Mobile: right side -->
+                <div class="flex md:hidden items-center gap-2">
+                    {% if user.is_authenticated %}
+                        <a href="{% url 'dashboard' %}" class="grid place-items-center w-9 h-9 rounded-xl bg-emerald-100 text-emerald-800 font-extrabold text-sm">
+                            {{ user.display_name|slice:":1"|upper }}
+                        </a>
+                    {% else %}
+                        <a href="{% url 'accounts:login' %}" class="px-3 py-1.5 text-sm font-bold text-vf-muted hover:text-vf-primary transition">Log in</a>
+                        <a href="{% url 'accounts:signup_reviewer' %}"
+                           class="inline-flex items-center justify-center min-h-[36px] px-4 rounded-xl bg-vf-primary text-white text-sm font-extrabold shadow-md shadow-emerald-700/25 hover:bg-vf-dark transition-all">
+                            Sign up
+                        </a>
+                    {% endif %}
+                </div>
             </div>
         </div>
-    </nav>
+    </header>
 
-    <main class="site-main">
+    <main>
         {% block content %}{% endblock %}
     </main>
 
-    <footer class="border-top mt-5 py-4 text-muted">
-        <div class="container text-center small">
-            &copy; {% now "Y" %} Verified Feedback Platform · Kenya
-        </div>
+    <footer class="border-t border-vf-line mt-12 py-6 text-center text-xs text-vf-muted">
+        &copy; {% now "Y" %} Verified Feedback Platform · Kenya
     </footer>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Close dropdown on outside click
+        document.addEventListener('click', function(e) {
+            const menu = document.getElementById('accountMenu');
+            const dropdown = document.getElementById('accountDropdown');
+            if (menu && dropdown && !menu.contains(e.target)) {
+                dropdown.classList.add('hidden');
+            }
+        });
+    </script>
     {% block extra_js %}{% endblock %}
 </body>
 </html>

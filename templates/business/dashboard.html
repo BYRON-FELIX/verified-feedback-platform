@@ -1,68 +1,61 @@
 {% extends "layouts/dashboard.html" %}
 
 {% block title %}Business Dashboard · VerifiedFeedback{% endblock %}
-{% block heading_actions %}
-    <a href="{% url 'campaigns:business_create' %}" class="btn btn-primary">
-        <i class="bi bi-plus-lg me-2"></i> New campaign
-    </a>
-{% endblock %}
 
 {% block dashboard_content %}
-<div class="page-intro mb-4">
-    <div><div class="page-kicker">Business workspace</div><h1 class="section-heading">Build better feedback loops.</h1><p class="text-muted mb-0">Launch focused campaigns and learn what customers actually experience.</p></div>
-</div>
-{% if not business %}
-    <div class="alert alert-warning">
-        You need to complete your business profile before you can create campaigns.
-        <a href="{% url 'businesses:profile' %}" class="alert-link">Set up business profile →</a>
+<div class="mx-auto w-full max-w-6xl">
+    <div class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+            <p class="mb-2 text-xs font-extrabold uppercase tracking-[0.18em] text-emerald-700">Business workspace</p>
+            <h1 class="mb-2 text-3xl font-extrabold tracking-tight text-slate-950 sm:text-4xl">Build better feedback loops.</h1>
+            <p class="max-w-xl text-base leading-7 text-slate-600">Launch focused campaigns and learn what customers actually experience.</p>
+        </div>
+        <div class="flex w-full sm:w-auto shrink-0">
+            <a href="{% url 'campaigns:business_create' %}" class="inline-flex w-full min-h-12 items-center justify-center rounded-xl bg-emerald-700 px-5 py-3 font-extrabold text-white shadow-lg shadow-emerald-700/20 transition hover:bg-emerald-800 focus:outline-none focus:ring-4 focus:ring-emerald-200">
+                <i class="bi bi-plus-lg me-2"></i> New campaign
+            </a>
+        </div>
     </div>
-{% endif %}
 
-<div class="row g-3 mb-4">
-    <div class="col-6 col-md-3">
-        <div class="card metric-card h-100">
-            <div class="card-body">
-                <div class="text-muted small">Active campaigns</div>
-                <div class="fs-4 fw-bold">0</div>
-            </div>
+    {% if not business %}
+    <div class="mb-6 flex flex-col gap-4 rounded-2xl border-2 border-amber-200 bg-amber-50 p-4 text-amber-950 sm:flex-row sm:items-center sm:justify-between sm:p-5">
+        <div class="flex items-start gap-3">
+            <i class="bi bi-shield-exclamation mt-1 text-xl text-amber-700"></i>
+            <div><strong>Profile incomplete.</strong>
+            <span class="text-amber-900/80">You need to complete your business profile before you can create campaigns.</span></div>
         </div>
+        <a href="{% url 'businesses:profile' %}" class="inline-flex min-h-11 shrink-0 items-center justify-center rounded-xl bg-amber-500 px-4 py-2 font-extrabold text-amber-950 transition hover:bg-amber-400">Set up profile <i class="bi bi-arrow-right ms-2"></i></a>
     </div>
-    <div class="col-6 col-md-3">
-        <div class="card metric-card h-100">
-            <div class="card-body">
-                <div class="text-muted small">Submissions</div>
-                <div class="fs-4 fw-bold">0</div>
-            </div>
-        </div>
-    </div>
-    <div class="col-6 col-md-3">
-        <div class="card metric-card h-100">
-            <div class="card-body">
-                <div class="text-muted small">Spent</div>
-                <div class="fs-4 fw-bold text-break">KSh 0</div>
-            </div>
-        </div>
-    </div>
-    <div class="col-6 col-md-3">
-        <div class="card metric-card h-100">
-            <div class="card-body">
-                <div class="text-muted small">Avg. rating</div>
-                <div class="fs-4 fw-bold">—</div>
-            </div>
-        </div>
-    </div>
-</div>
+    {% endif %}
 
-<div class="card">
-    <div class="card-body empty-state">
-        <i class="bi bi-megaphone"></i>
-        <h5>Your campaigns</h5>
-        <p class="text-muted mb-0">
-            You haven't launched any campaigns yet.
-        </p>
-        <a href="{% url 'campaigns:business_create' %}" class="btn btn-primary mt-3">
-            <i class="bi bi-plus-lg"></i> Create your first campaign
-        </a>
+    <div class="mb-5 grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <div class="rounded-2xl border-2 border-slate-200 bg-white p-4 shadow-sm sm:p-5 relative overflow-hidden">
+            <div class="mb-3 grid h-9 w-9 place-items-center rounded-xl bg-emerald-100 text-emerald-800"><i class="bi bi-megaphone"></i></div>
+            <div class="text-xs font-extrabold uppercase tracking-wide text-slate-500">Active campaigns</div>
+            <div class="mt-1 break-words text-2xl font-extrabold text-slate-950 sm:text-3xl">0</div>
+        </div>
+        <div class="rounded-2xl border-2 border-slate-200 bg-white p-4 shadow-sm sm:p-5 relative overflow-hidden">
+            <div class="mb-3 grid h-9 w-9 place-items-center rounded-xl bg-sky-100 text-sky-800"><i class="bi bi-file-earmark-check"></i></div>
+            <div class="text-xs font-extrabold uppercase tracking-wide text-slate-500">Submissions</div>
+            <div class="mt-1 break-words text-2xl font-extrabold text-slate-950 sm:text-3xl">0</div>
+        </div>
+        <div class="rounded-2xl border-2 border-slate-200 bg-white p-4 shadow-sm sm:p-5 relative overflow-hidden">
+            <div class="mb-3 grid h-9 w-9 place-items-center rounded-xl bg-amber-100 text-amber-800"><i class="bi bi-currency-dollar"></i></div>
+            <div class="text-xs font-extrabold uppercase tracking-wide text-slate-500">Spent</div>
+            <div class="mt-1 break-words text-2xl font-extrabold text-slate-950 sm:text-3xl">KSh 0</div>
+        </div>
+        <div class="rounded-2xl border-2 border-slate-200 bg-white p-4 shadow-sm sm:p-5 relative overflow-hidden">
+            <div class="mb-3 grid h-9 w-9 place-items-center rounded-xl bg-violet-100 text-violet-800"><i class="bi bi-star"></i></div>
+            <div class="text-xs font-extrabold uppercase tracking-wide text-slate-500">Avg. rating</div>
+            <div class="mt-1 break-words text-2xl font-extrabold text-slate-950 sm:text-3xl">—</div>
+        </div>
     </div>
+
+    <section class="rounded-2xl border-2 border-slate-200 bg-white p-6 text-center shadow-sm sm:p-10">
+        <span class="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-emerald-100 text-emerald-800"><i class="bi bi-megaphone text-2xl"></i></span>
+        <h2 class="mt-4 text-xl font-extrabold text-slate-950 sm:text-2xl">Your campaigns</h2>
+        <p class="mx-auto mt-2 max-w-md text-slate-600">You haven't launched any campaigns yet. Create your first campaign to start gathering verified feedback.</p>
+        <a href="{% url 'campaigns:business_create' %}" class="mt-5 inline-flex min-h-12 items-center justify-center rounded-xl bg-emerald-700 px-6 py-3 font-extrabold text-white shadow-lg shadow-emerald-700/20 transition hover:bg-emerald-800"><i class="bi bi-plus-lg me-2"></i> Create your first campaign</a>
+    </section>
 </div>
 {% endblock %}
