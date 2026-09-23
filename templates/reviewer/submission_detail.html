@@ -1,17 +1,6 @@
 {% extends "layouts/dashboard.html" %}
 
 {% block title %}Submission · VerifiedFeedback{% endblock %}
-{% block side_label %}Reviewer{% endblock %}
-
-{% block sidebar %}
-    <li><a class="nav-link" href="/reviewer/"><i class="bi bi-speedometer2"></i> Dashboard</a></li>
-    <li><a class="nav-link" href="/campaigns/reviewer/"><i class="bi bi-search"></i> Find Tasks</a></li>
-    <li><a class="nav-link" href="{% url 'campaigns:reviewer_my_applications' %}"><i class="bi bi-inbox"></i> My Applications</a></li>
-    <li><a class="nav-link active" href="{% url 'submissions:mine' %}"><i class="bi bi-file-earmark-text"></i> My Submissions</a></li>
-    <li><a class="nav-link" href="{% url 'withdrawals:wallet' %}"><i class="bi bi-wallet2"></i> Wallet</a></li>
-    <li><a class="nav-link" href="{% url 'reviewers:profile' %}"><i class="bi bi-person"></i> Profile</a></li>
-{% endblock %}
-
 {% block dashboard_content %}
 <div class="card border-0 shadow-sm mb-4">
     <div class="card-body p-4">
@@ -28,7 +17,7 @@
                 {% elif submission.status == "REJECTED" %}<span class="badge bg-danger mb-2">Rejected</span>
                 {% endif %}
                 <div class="text-muted small">Reward</div>
-                <div class="fw-bold">KSh {{ submission.reward_amount_ksh }}</div>
+                <div class="fw-bold">${{ submission.reward_amount }}</div>
             </div>
         </div>
     </div>
@@ -46,10 +35,6 @@
         <div class="mb-3">
             <div class="text-muted small">Written feedback</div>
             <p class="mb-0">{{ submission.written_feedback|linebreaks }}</p>
-        </div>
-        <div>
-            <div class="text-muted small">Date of experience</div>
-            <div>{{ submission.experience_date|default:"—" }}</div>
         </div>
     </div>
 </div>

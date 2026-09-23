@@ -1,0 +1,71 @@
+{% if user.role == "BUSINESS" %}
+    <div class="dash-identity">
+        <span class="dash-identity-mark"><i class="bi bi-buildings"></i></span>
+        <span>
+            <span class="dash-identity-kicker">Workspace</span>
+            <strong>Business</strong>
+        </span>
+    </div>
+    <nav aria-label="Business navigation">
+        <a class="dash-nav-link{% if nav_active == 'dashboard' %} active{% endif %}" href="{% url 'businesses:dashboard' %}">
+            <i class="bi bi-grid-1x2-fill"></i><span>Overview</span>
+        </a>
+        <a class="dash-nav-link{% if nav_active == 'campaigns' %} active{% endif %}" href="{% url 'campaigns:business_list' %}">
+            <i class="bi bi-megaphone-fill"></i><span>Campaigns</span>
+        </a>
+        <a class="dash-nav-link{% if nav_active == 'profile' %} active{% endif %}" href="{% url 'businesses:profile' %}">
+            <i class="bi bi-building"></i><span>Business profile</span>
+        </a>
+    </nav>
+{% elif user.role == "ADMIN" or user.is_superuser %}
+    <div class="dash-identity">
+        <span class="dash-identity-mark"><i class="bi bi-shield-check"></i></span>
+        <span>
+            <span class="dash-identity-kicker">Operations</span>
+            <strong>Admin</strong>
+        </span>
+    </div>
+    <nav aria-label="Admin navigation">
+        <a class="dash-nav-link{% if nav_active == 'withdrawals' %} active{% endif %}" href="{% url 'withdrawals:admin_queue' %}">
+            <i class="bi bi-wallet-fill"></i><span>Withdrawal queue</span>
+        </a>
+        <a class="dash-nav-link" href="/django-admin/">
+            <i class="bi bi-sliders2"></i><span>Django admin</span>
+        </a>
+    </nav>
+{% else %}
+    <div class="dash-identity">
+        <span class="dash-identity-mark"><i class="bi bi-person-check-fill"></i></span>
+        <span>
+            <span class="dash-identity-kicker">Reviewer space</span>
+            <strong>VerifiedFeedback</strong>
+        </span>
+    </div>
+    <nav aria-label="Reviewer navigation">
+        <a class="dash-nav-link{% if nav_active == 'dashboard' %} active{% endif %}" href="{% url 'reviewers:dashboard' %}">
+            <i class="bi bi-grid-1x2-fill"></i><span>Overview</span>
+        </a>
+        <a class="dash-nav-link{% if nav_active == 'campaigns' %} active{% endif %}" href="{% url 'campaigns:reviewer_list' %}">
+            <i class="bi bi-search"></i><span>Find tasks</span>
+        </a>
+        <a class="dash-nav-link{% if nav_active == 'applications' %} active{% endif %}" href="{% url 'campaigns:reviewer_my_applications' %}">
+            <i class="bi bi-inbox"></i><span>My applications</span>
+        </a>
+        <a class="dash-nav-link{% if nav_active == 'submissions' %} active{% endif %}" href="{% url 'submissions:mine' %}">
+            <i class="bi bi-file-earmark-text"></i><span>My submissions</span>
+        </a>
+        <a class="dash-nav-link{% if nav_active == 'wallet' %} active{% endif %}" href="{% url 'withdrawals:wallet' %}">
+            <i class="bi bi-wallet2"></i><span>Wallet</span>
+        </a>
+        <a class="dash-nav-link{% if nav_active == 'profile' %} active{% endif %}" href="{% url 'reviewers:profile' %}">
+            <i class="bi bi-person"></i><span>Profile</span>
+        </a>
+    </nav>
+{% endif %}
+
+<div class="dash-side-footer">
+    <form method="post" action="{% url 'accounts:logout' %}">
+        {% csrf_token %}
+        <button type="submit" class="dash-side-footer-link"><i class="bi bi-box-arrow-right"></i> Log out</button>
+    </form>
+</div>

@@ -3,7 +3,7 @@ from django.contrib import admin
 from django.urls import include, path
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 
-from apps.common.views import dashboard_router, landing, seed_demo_data
+from apps.common.views import dashboard_router, landing
 
 urlpatterns = [
     path("", landing, name="landing"),
@@ -14,9 +14,7 @@ urlpatterns = [
     path("campaigns/", include("apps.campaigns.urls")),
     path("submissions/", include("apps.submissions.urls")),
     path("withdrawals/", include("apps.withdrawals.urls")),
-
-    # One-off seeder for deployed environments
-    path("seed-demo-data/", seed_demo_data, name="seed_demo_data"),
+    path("payments/", include("apps.payments.urls")),
 
     path("django-admin/", admin.site.urls),
     path("api/schema/", SpectacularAPIView.as_view(), name="schema"),

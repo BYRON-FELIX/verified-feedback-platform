@@ -1,101 +1,168 @@
 {% extends "layouts/dashboard.html" %}
 
 {% block title %}Submit task · {{ campaign.title }}{% endblock %}
-{% block side_label %}Reviewer{% endblock %}
-
-{% block sidebar %}
-    <li><a class="nav-link" href="/reviewer/"><i class="bi bi-speedometer2"></i> Dashboard</a></li>
-    <li><a class="nav-link" href="/campaigns/reviewer/"><i class="bi bi-search"></i> Find Tasks</a></li>
-    <li><a class="nav-link" href="{% url 'campaigns:reviewer_my_applications' %}"><i class="bi bi-inbox"></i> My Applications</a></li>
-    <li><a class="nav-link active" href="{% url 'submissions:mine' %}"><i class="bi bi-file-earmark-text"></i> My Submissions</a></li>
-    <li><a class="nav-link" href="{% url 'withdrawals:wallet' %}"><i class="bi bi-wallet2"></i> Wallet</a></li>
-    <li><a class="nav-link" href="{% url 'reviewers:profile' %}"><i class="bi bi-person"></i> Profile</a></li>
-{% endblock %}
-
 {% block dashboard_content %}
-<div class="card border-0 shadow-sm mb-4">
-    <div class="card-body p-4">
-        <div class="d-flex justify-content-between align-items-start mb-2">
-            <div>
-                <span class="badge bg-secondary-subtle text-secondary-emphasis">{{ campaign.get_campaign_type_display }}</span>
-                <h5 class="mt-2 mb-1">{{ campaign.title }}</h5>
-                <small class="text-muted">{{ campaign.business.name }}</small>
+<div class="mx-auto w-full max-w-4xl">
+    <div class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+            <p class="mb-2 text-xs font-extrabold uppercase tracking-[0.18em] text-emerald-700">One honest response</p>
+            <h1 class="mb-2 text-3xl font-extrabold tracking-tight text-slate-950 sm:text-4xl">Share what happened.</h1>
+            <p class="max-w-2xl text-base leading-7 text-slate-600">Your rating and words are equally useful. Be specific and stay true to your experience.</p>
+        </div>
+        <div class="flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm font-bold text-emerald-800">
+            <i class="bi bi-shield-check"></i> Honest feedback matters
+        </div>
+    </div>
+
+    <div class="mb-5 overflow-hidden rounded-2xl border-2 border-slate-200 bg-white shadow-sm">
+        <div class="flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between sm:p-6">
+            <div class="min-w-0">
+                <span class="inline-flex rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-extrabold uppercase tracking-wide text-slate-600">
+                    {{ campaign.get_campaign_type_display }}
+                </span>
+                <h2 class="mt-3 mb-1 break-words text-xl font-extrabold text-slate-950">{{ campaign.title }}</h2>
+                <p class="mb-0 text-sm text-slate-500">{{ campaign.business.name }}</p>
             </div>
-            <span class="badge bg-success-subtle text-success-emphasis py-2 px-3">
-                Reward: KSh {{ campaign.reward_amount_ksh }}
-            </span>
+            <div class="shrink-0 rounded-xl border-2 border-amber-200 bg-amber-50 px-4 py-3 text-left sm:text-right">
+                <span class="block text-xs font-bold uppercase tracking-wide text-amber-700">Reward</span>
+                <strong class="text-xl font-extrabold text-amber-950">${{ campaign.reward_amount }}</strong>
+            </div>
         </div>
     </div>
 </div>
-
+<form method="post" novalidate class="space-y-5">
 <form method="post" novalidate>
     {% csrf_token %}
 
     {% if form.non_field_errors %}
-        <div class="alert alert-danger">{{ form.non_field_errors.0 }}</div>
+        <div class="rounded-xl border-2 border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-800">{{ form.non_field_errors.0 }}</div>
     {% endif %}
 
-    <div class="card border-0 shadow-sm mb-4">
-        <div class="card-body p-4">
-            <h6 class="mb-3">Overall feedback</h6>
-
-            <div class="mb-3">
-                <label class="form-label d-block">{{ form.overall_rating.label }}</label>
-                {% for radio in form.overall_rating %}
-                    <div class="form-check form-check-inline">
-                        {{ radio.tag }}
-                        <label class="form-check-label" for="{{ radio.id_for_label }}">{{ radio.choice_label }}</label>
-                    </div>
-                {% endfor %}
-                {% if form.overall_rating.errors %}<div class="text-danger small">{{ form.overall_rating.errors.0 }}</div>{% endif %}
-                <div class="form-text">Rate honestly. You will be paid the same regardless of your rating.</div>
+    {# ---------- Overall feedback ---------- #}
+    <section class="rounded-2xl border-2 border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+            <div class="mb-5 flex items-start gap-3">
+                <span class="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-emerald-100 text-emerald-800"><i class="bi bi-chat-heart"></i></span>
+                <div><h2 class="text-lg font-extrabold text-slate-950">Overall feedback</h2><p class="mt-1 text-sm text-slate-500">Start with your honest impression, then add the detail behind it.</p></div>
             </div>
 
-            <div class="mb-3">
-                <label class="form-label">{{ form.written_feedback.label }}</label>
+            <div class="mb-4">
+                <label class="mb-2 block text-sm font-extrabold text-slate-800">{{ form.overall_rating.label }}</label>
+                <div class="rating-group flex flex-wrap gap-1" data-rating-group>
+                    {% for radio in form.overall_rating %}
+                        <label class="rating-option inline-flex min-h-11 cursor-pointer items-center rounded-xl border-2 border-slate-200 bg-slate-50 px-3 py-2 text-2xl font-bold text-slate-300 transition hover:border-emerald-400 hover:bg-emerald-50" data-rating-value="{{ forloop.counter }}" title="{{ radio.choice_label }}">
+                            {{ radio.tag }}
+                            <span class="rating-star" aria-hidden="true">★</span>
+                            <span class="sr-only">{{ radio.choice_label }}</span>
+                        </label>
+                    {% endfor %}
+                </div>
+                {% if form.overall_rating.errors %}
+                    <div class="mt-2 text-sm font-semibold text-red-700">{{ form.overall_rating.errors.0 }}</div>
+                {% endif %}
+                <div class="mt-2 text-sm text-slate-500">Rate honestly. You'll be paid the same regardless of your rating.</div>
+            </div>
+
+            <div class="mb-4">
+                <label class="mb-2 block text-sm font-extrabold text-slate-800">{{ form.written_feedback.label }}</label>
                 {{ form.written_feedback }}
-                {% if form.written_feedback.errors %}<div class="text-danger small">{{ form.written_feedback.errors.0 }}</div>{% endif %}
+                {% if form.written_feedback.errors %}
+                    <div class="mt-2 text-sm font-semibold text-red-700">{{ form.written_feedback.errors.0 }}</div>
+                {% endif %}
             </div>
 
-            <div class="mb-3">
-                <label class="form-label">{{ form.experience_date.label }}</label>
-                {{ form.experience_date }}
-                {% if form.experience_date.errors %}<div class="text-danger small">{{ form.experience_date.errors.0 }}</div>{% endif %}
-            </div>
-        </div>
-    </div>
+    </section>
 
+    {# ---------- Campaign questions ---------- #}
     {% if questions_and_fields %}
-    <div class="card border-0 shadow-sm mb-4">
-        <div class="card-body p-4">
-            <h6 class="mb-3">Campaign questions</h6>
+    <section class="rounded-2xl border-2 border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+            <div class="mb-5 flex items-start gap-3">
+                <span class="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-sky-100 text-sky-800"><i class="bi bi-list-check"></i></span>
+                <div><h2 class="text-lg font-extrabold text-slate-950">Campaign questions</h2><p class="mt-1 text-sm text-slate-500">Answer each question as clearly as you can.</p></div>
+            </div>
+
             {% for q, field in questions_and_fields %}
-                <div class="mb-4">
-                    <label class="form-label fw-semibold">{{ field.label }}</label>
-                    {% if q.question_type == "SINGLE_CHOICE" or q.question_type == "YES_NO" or q.question_type == "RATING" %}
-                        <div>{{ field }}</div>
+                <div class="mb-6 border-b border-slate-100 pb-6 last:mb-0 last:border-0 last:pb-0">
+                    <label class="mb-2 block text-sm font-extrabold leading-6 text-slate-800">
+                        {{ field.label }}
+                    </label>
+
+                    {% if q.question_type == "SINGLE_CHOICE" %}
+                        {{ field }}
+
                     {% elif q.question_type == "MULTI_CHOICE" %}
-                        <div>{{ field }}</div>
+                        <div class="flex flex-col gap-2">
+                            {% for checkbox in field %}
+                                <label class="flex min-h-11 cursor-pointer items-center gap-3 rounded-xl border-2 border-slate-200 px-3 py-2 text-sm font-semibold text-slate-700 transition hover:border-emerald-400 hover:bg-emerald-50">
+                                    {{ checkbox.tag }}
+                                    <span>{{ checkbox.choice_label }}</span>
+                                </label>
+                            {% endfor %}
+                        </div>
+
+                    {% elif q.question_type == "YES_NO" or q.question_type == "RATING" %}
+                        <div class="rating-group flex flex-wrap gap-1" data-rating-group>
+                            {% for radio in field %}
+                                <label class="rating-option inline-flex min-h-11 cursor-pointer items-center rounded-xl border-2 border-slate-200 bg-slate-50 px-3 py-2 text-2xl font-bold text-slate-300 transition hover:border-emerald-400 hover:bg-emerald-50" data-rating-value="{{ forloop.counter }}" title="{{ radio.choice_label }}">
+                                    {{ radio.tag }}
+                                    <span class="rating-star" aria-hidden="true">★</span>
+                                    <span class="sr-only">{{ radio.choice_label }}</span>
+                                </label>
+                            {% endfor %}
+                        </div>
+
                     {% else %}
                         {{ field }}
                     {% endif %}
-                    {% if field.errors %}<div class="text-danger small">{{ field.errors.0 }}</div>{% endif %}
+
+                    {% if field.errors %}
+                        <div class="mt-2 text-sm font-semibold text-red-700">{{ field.errors.0 }}</div>
+                    {% endif %}
                 </div>
             {% endfor %}
-        </div>
-    </div>
+    </section>
     {% endif %}
 
-    <div class="alert alert-light border small">
-        <strong>By submitting</strong> you confirm this feedback reflects your real experience.
+    <div class="rounded-xl border-2 border-slate-200 bg-slate-50 px-4 py-3 text-sm leading-6 text-slate-600">
+        <strong class="text-slate-900">By submitting</strong> you confirm this feedback reflects your real experience.
         Submitting false or duplicated information may result in account suspension and forfeiture of rewards.
     </div>
 
-    <div class="d-flex justify-content-between mb-5">
-        <a href="{% url 'campaigns:reviewer_detail' campaign.slug %}" class="btn btn-outline-secondary">Cancel</a>
-        <button type="submit" class="btn btn-primary btn-lg px-4">
-            Submit feedback &amp; get paid
+    <div class="flex flex-col-reverse gap-3 pb-8 sm:flex-row sm:justify-end">
+        <a href="{% url 'campaigns:reviewer_detail' campaign.slug %}"
+           class="inline-flex min-h-12 items-center justify-center rounded-xl border-2 border-slate-300 bg-white px-5 py-3 font-extrabold text-slate-700 transition hover:border-slate-400 hover:bg-slate-50">
+            Cancel
+        </a>
+        <button type="submit" class="inline-flex min-h-12 items-center justify-center rounded-xl bg-emerald-700 px-6 py-3 font-extrabold text-white shadow-lg shadow-emerald-700/20 transition hover:bg-emerald-800 focus:outline-none focus:ring-4 focus:ring-emerald-200">
+            <i class="bi bi-send me-2"></i>Submit feedback &amp; get paid
         </button>
     </div>
 </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{{ block.super }}
+<script>
+    (function () {
+        function updateRating(group, selectedValue) {
+            group.querySelectorAll('[data-rating-value]').forEach(function (option) {
+                const value = Number(option.dataset.ratingValue);
+                option.classList.toggle('rating-option-selected', value <= selectedValue);
+                option.setAttribute('aria-pressed', value <= selectedValue ? 'true' : 'false');
+            });
+        }
+
+        document.querySelectorAll('[data-rating-group]').forEach(function (group) {
+            const radios = group.querySelectorAll('input[type="radio"]');
+            const checked = group.querySelector('input[type="radio"]:checked');
+            if (checked) updateRating(group, Number(checked.value));
+
+            radios.forEach(function (radio) {
+                radio.addEventListener('change', function () {
+                    updateRating(group, Number(radio.value));
+                });
+            });
+        });
+    })();
+</script>
 {% endblock %}

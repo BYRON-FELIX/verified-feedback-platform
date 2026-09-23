@@ -1,17 +1,8 @@
 {% extends "layouts/dashboard.html" %}
 
 {% block title %}{% if is_create %}New Campaign{% else %}Edit Campaign{% endif %} · VerifiedFeedback{% endblock %}
-{% block side_label %}Business{% endblock %}
-
-{% block sidebar %}
-    <li><a class="nav-link" href="/business/"><i class="bi bi-speedometer2"></i> Dashboard</a></li>
-    <li><a class="nav-link active" href="/campaigns/business/"><i class="bi bi-megaphone"></i> Campaigns</a></li>
-    <li><a class="nav-link" href="#"><i class="bi bi-inbox"></i> Submissions</a></li>
-    <li><a class="nav-link" href="#"><i class="bi bi-graph-up"></i> Analytics</a></li>
-    <li><a class="nav-link" href="/business/profile/"><i class="bi bi-building"></i> Profile</a></li>
-{% endblock %}
-
 {% block dashboard_content %}
+<div class="page-intro mb-4"><div><div class="page-kicker">Campaign builder</div><h1 class="section-heading">{% if is_create %}Create a useful task.{% else %}Edit campaign{% endif %}</h1><p class="text-muted mb-0">Give reviewers enough context to provide feedback you can act on.</p></div></div>
 <form method="post" novalidate>
     {% csrf_token %}
 
@@ -21,27 +12,27 @@
 
     {# ---------- Basics ---------- #}
     <div class="card border-0 shadow-sm mb-4">
-        <div class="card-body p-4">
-            <h5 class="mb-3">Campaign basics</h5>
+        <div class="card-body">
+            <h6 class="mb-3">Campaign basics</h6>
             <div class="row g-3">
-                <div class="col-md-8">
+                <div class="col-12 col-md-8">
                     <label class="form-label">Title</label>
                     {{ form.title }}
                     {% if form.title.errors %}<div class="text-danger small">{{ form.title.errors.0 }}</div>{% endif %}
                 </div>
-                <div class="col-md-4">
+                <div class="col-12 col-md-4">
                     <label class="form-label">Category</label>
                     {{ form.category }}
                 </div>
-                <div class="col-md-4">
+                <div class="col-12 col-md-4">
                     <label class="form-label">Campaign type</label>
                     {{ form.campaign_type }}
                 </div>
-                <div class="col-md-8">
+                <div class="col-12 col-md-8">
                     <label class="form-label">Location (optional)</label>
                     <div class="row g-2">
-                        <div class="col-md-6">{{ form.county }}</div>
-                        <div class="col-md-6">{{ form.location_description }}</div>
+                        <div class="col-12 col-sm-6">{{ form.county }}</div>
+                        <div class="col-12 col-sm-6">{{ form.location_description }}</div>
                     </div>
                 </div>
                 <div class="col-12">
@@ -58,34 +49,30 @@
         </div>
     </div>
 
-    {# ---------- Reward & slots ---------- #}
+    {# ---------- Reward ---------- #}
     <div class="card border-0 shadow-sm mb-4">
-        <div class="card-body p-4">
-            <h5 class="mb-3">Reward & participation</h5>
+        <div class="card-body">
+            <h6 class="mb-3">Reward &amp; participation</h6>
             <div class="row g-3">
-                <div class="col-md-4">
-                    <label class="form-label">Reward per participant (KSh)</label>
-                    {{ form.reward_amount_ksh }}
+                <div class="col-12 col-md-4">
+                    <label class="form-label">Reward per participant (USD)</label>
+                    {{ form.reward_amount }}
                 </div>
-                <div class="col-md-4">
+                <div class="col-12 col-md-4">
                     <label class="form-label">Target participants</label>
                     {{ form.target_participants }}
                 </div>
-                <div class="col-md-4">
+                <div class="col-12 col-md-4">
                     <label class="form-label">Estimated time (minutes)</label>
                     {{ form.estimated_minutes }}
                 </div>
-                <div class="col-md-4">
+                <div class="col-12 col-md-4">
                     <label class="form-label">Start date</label>
                     {{ form.start_date }}
                 </div>
-                <div class="col-md-4">
+                <div class="col-12 col-md-4">
                     <label class="form-label">End date</label>
                     {{ form.end_date }}
-                </div>
-                <div class="col-md-4">
-                    <label class="form-label">Experience must be within (days)</label>
-                    {{ form.min_days_since_experience }}
                 </div>
             </div>
             <div class="alert alert-light border mt-3 mb-0 small">
@@ -97,65 +84,105 @@
 
     {# ---------- Requirements ---------- #}
     <div class="card border-0 shadow-sm mb-4">
-        <div class="card-body p-4">
-            <h5 class="mb-3">Eligibility requirements</h5>
+        <div class="card-body">
+            <h6 class="mb-3">Eligibility requirements</h6>
             <p class="text-muted small">
-                Each item is a rule the reviewer must satisfy to participate.
-                Do not include requirements about rating positively — they will be rejected.
+                Each item is a rule the reviewer must satisfy. Don't require positive ratings.
             </p>
 
             {{ req_formset.management_form }}
-            <div class="table-responsive">
+
+            {% if req_formset.non_form_errors %}
+                <div class="alert alert-danger small">{{ req_formset.non_form_errors }}</div>
+            {% endif %}
+
+            {# Desktop table #}
+            <div class="formset-table table-responsive">
                 <table class="table align-middle">
                     <thead class="table-light">
                         <tr>
-                            <th style="width: 55%;">Requirement</th>
-                            <th style="width: 15%;">Mandatory</th>
-                            <th style="width: 15%;">Order</th>
-                            <th style="width: 15%;">Delete</th>
+                            <th>Requirement</th>
+                            <th>Mandatory</th>
+                            <th>Order</th>
+                            <th>Delete</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for f in req_formset %}
                         <tr>
-                            <td>{{ f.text }}{{ f.id }}</td>
+                            <td>
+                                {{ f.text }}{{ f.id }}
+                                {% for e in f.text.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
+                            </td>
                             <td class="text-center">{{ f.is_mandatory }}</td>
-                            <td>{{ f.order }}</td>
+                            <td>
+                                {{ f.order }}
+                                {% for e in f.order.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
+                            </td>
                             <td class="text-center">{{ f.DELETE }}</td>
                         </tr>
                         {% endfor %}
                     </tbody>
                 </table>
             </div>
+
+            {# Mobile cards #}
+            <div class="formset-cards">
+                {% for f in req_formset %}
+                    <div class="formset-card">
+                        <div class="formset-card-header">
+                            <span class="formset-card-title">Requirement {{ forloop.counter }}</span>
+                            <label class="form-check-label small text-danger">
+                                Delete {{ f.DELETE }}
+                            </label>
+                        </div>
+                        {{ f.id }}
+                        <div class="mb-2">
+                            <label class="form-label small">Requirement</label>
+                            {{ f.text }}
+                            {% for e in f.text.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
+                        </div>
+                        <div class="row g-2">
+                            <div class="col-6">
+                                <label class="form-label small">Mandatory</label>
+                                <div class="form-check">{{ f.is_mandatory }}</div>
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label small">Order</label>
+                                {{ f.order }}
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
         </div>
     </div>
 
     {# ---------- Questions ---------- #}
     <div class="card border-0 shadow-sm mb-4">
-        <div class="card-body p-4">
-            <h5 class="mb-3">Questions</h5>
+        <div class="card-body">
+            <h6 class="mb-3">Questions</h6>
             <p class="text-muted small">
-                These are the questions the reviewer answers after the experience.
-                For choice types, put each option on its own line in the "Options" box.
+                For choice types, put each option on its own line.
             </p>
 
+            {{ q_formset.management_form }}
+
             {% if q_formset.non_form_errors %}
-                <div class="alert alert-danger small">
-                    {{ q_formset.non_form_errors }}
-                </div>
+                <div class="alert alert-danger small">{{ q_formset.non_form_errors }}</div>
             {% endif %}
 
-            {{ q_formset.management_form }}
-            <div class="table-responsive">
+            {# Desktop table #}
+            <div class="formset-table table-responsive">
                 <table class="table align-middle">
                     <thead class="table-light">
                         <tr>
-                            <th style="width: 35%;">Question</th>
-                            <th style="width: 15%;">Type</th>
-                            <th style="width: 25%;">Options</th>
-                            <th style="width: 10%;">Required</th>
-                            <th style="width: 8%;">Order</th>
-                            <th style="width: 7%;">Delete</th>
+                            <th>Question</th>
+                            <th>Type</th>
+                            <th>Options</th>
+                            <th>Required</th>
+                            <th>Order</th>
+                            <th>Delete</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -184,11 +211,52 @@
                     </tbody>
                 </table>
             </div>
+
+            {# Mobile cards #}
+            <div class="formset-cards">
+                {% for f in q_formset %}
+                    <div class="formset-card">
+                        <div class="formset-card-header">
+                            <span class="formset-card-title">Question {{ forloop.counter }}</span>
+                            <label class="form-check-label small text-danger">
+                                Delete {{ f.DELETE }}
+                            </label>
+                        </div>
+                        {{ f.id }}
+                        <div class="mb-2">
+                            <label class="form-label small">Question</label>
+                            {{ f.text }}
+                            {% for e in f.text.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
+                        </div>
+                        <div class="mb-2">
+                            <label class="form-label small">Type</label>
+                            {{ f.question_type }}
+                        </div>
+                        <div class="mb-2">
+                            <label class="form-label small">Options</label>
+                            {{ f.options }}
+                            {% for e in f.options.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
+                        </div>
+                        <div class="row g-2">
+                            <div class="col-6">
+                                <label class="form-label small">Required</label>
+                                <div class="form-check">{{ f.is_required }}</div>
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label small">Order</label>
+                                {{ f.order }}
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
         </div>
     </div>
 
-    <div class="d-flex justify-content-between mb-5">
-        <a href="{% url 'campaigns:business_list' %}" class="btn btn-outline-secondary">Cancel</a>
+    <div class="form-actions mb-5">
+        <a href="{% url 'campaigns:business_list' %}" class="btn btn-outline-secondary">
+            Cancel
+        </a>
         <button type="submit" class="btn btn-primary">
             Save as draft
         </button>

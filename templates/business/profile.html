@@ -1,16 +1,6 @@
 {% extends "layouts/dashboard.html" %}
 
 {% block title %}Business Profile · VerifiedFeedback{% endblock %}
-{% block side_label %}Business{% endblock %}
-
-{% block sidebar %}
-    <li><a class="nav-link" href="/business/"><i class="bi bi-speedometer2"></i> Dashboard</a></li>
-    <li><a class="nav-link" href="/campaigns/business/"><i class="bi bi-megaphone"></i> Campaigns</a></li>
-    <li><a class="nav-link" href="#"><i class="bi bi-inbox"></i> Submissions</a></li>
-    <li><a class="nav-link" href="#"><i class="bi bi-graph-up"></i> Analytics</a></li>
-    <li><a class="nav-link active" href="/business/profile/"><i class="bi bi-building"></i> Profile</a></li>
-{% endblock %}
-
 {% block dashboard_content %}
 <div class="row g-4">
     <div class="col-lg-4">
@@ -18,10 +8,9 @@
             <div class="card-body text-center p-4">
                 {% if business.logo %}
                     <img src="{{ business.logo.url }}" alt="{{ business.name }}"
-                         class="rounded" style="width:72px;height:72px;object-fit:cover;">
+                        class="profile-logo rounded">
                 {% else %}
-                    <div class="rounded bg-primary-subtle text-primary d-inline-flex align-items-center justify-content-center"
-                         style="width:72px;height:72px;font-size:28px;font-weight:600;">
+                    <div class="profile-logo profile-initial rounded bg-primary-subtle text-primary d-inline-flex align-items-center justify-content-center">
                         {{ business.display_initial|default:"?" }}
                     </div>
                 {% endif %}
@@ -57,23 +46,23 @@
                     {% csrf_token %}
 
                     <div class="row g-3">
-                        <div class="col-md-8">
+                        <div class="col-12 col-md-8">
                             <label class="form-label">Business name</label>
                             {{ form.name }}
                             {% if form.name.errors %}<div class="text-danger small">{{ form.name.errors.0 }}</div>{% endif %}
                         </div>
-                        <div class="col-md-4">
+                        <div class="col-12 col-sm-6 col-md-4">
                             <label class="form-label">Industry</label>
                             {{ form.industry }}
                         </div>
 
-                        <div class="col-md-6">
+                        <div class="col-12 col-sm-6">
                             <label class="form-label">Logo</label>
                             {{ form.logo }}
                             <div class="form-text">PNG or JPG, up to 2 MB.</div>
                             {% if form.logo.errors %}<div class="text-danger small">{{ form.logo.errors.0 }}</div>{% endif %}
                         </div>
-                        <div class="col-md-6">
+                        <div class="col-12 col-sm-6">
                             <label class="form-label">Website</label>
                             {{ form.website }}
                         </div>
@@ -83,30 +72,32 @@
                             {{ form.description }}
                         </div>
 
-                        <div class="col-md-4">
+                        <div class="col-12 col-sm-6 col-md-4">
                             <label class="form-label">Registration number</label>
                             {{ form.registration_number }}
                         </div>
-                        <div class="col-md-4">
+                        <div class="col-12 col-sm-6 col-md-4">
                             <label class="form-label">KRA PIN</label>
                             {{ form.kra_pin }}
                         </div>
-                        <div class="col-md-4">
+                        <div class="col-12 col-sm-6 col-md-4">
                             <label class="form-label">Physical address</label>
                             {{ form.physical_address }}
                         </div>
 
-                        <div class="col-md-6">
+                        <div class="col-12 col-sm-6">
                             <label class="form-label">Support email</label>
                             {{ form.support_email }}
                         </div>
-                        <div class="col-md-6">
+                        <div class="col-12 col-sm-6">
                             <label class="form-label">Support phone</label>
                             {{ form.support_phone }}
                         </div>
                     </div>
 
-                    <button type="submit" class="btn btn-primary mt-4">Save profile</button>
+                    <div class="form-actions mt-4">
+                        <button type="submit" class="btn btn-primary">Save profile</button>
+                    </div>
                 </form>
             </div>
         </div>

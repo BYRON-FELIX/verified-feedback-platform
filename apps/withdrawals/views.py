@@ -1,12 +1,35 @@
+from django.conf import settings
 from django.contrib import messages
 from django.shortcuts import get_object_or_404, redirect, render
+from django.views.decorators.http import require_POST
 
 from apps.common.decorators import admin_required, reviewer_required
+from apps.common.models import PlatformSettings
+from apps.payments.services import (
+    PayHeroError,
+    has_successful_mpesa_verification,
+    initiate_mpesa_account_verification,
+)
 from apps.wallets.services import get_or_create_wallet
 
 from .forms import WithdrawalRequestForm
-from .models import Withdrawal, WithdrawalStatus
-from .services import WithdrawalError, mark_completed, mark_failed, mark_processing, request_withdrawal
+from .models import Withdrawal, WithdrawalProvider, WithdrawalStatus
+from .services import (
+    WithdrawalError,
+    mark_completed,
+    mark_failed,
+    mark_processing,
+    request_withdrawal,
+)
+
+
+def _user_country_code(user):
+    try:
+        if hasattr(user, "reviewer_profile") and user.reviewer_profile.country:
+            return user.reviewer_profile.country.code
+    except Exception:
+        pass
+    return None
 
 
 # ---------- Reviewer ----------
@@ -29,24 +52,43 @@ def wallet_view(request):
 @reviewer_required
 def request_withdrawal_view(request):
     wallet = get_or_create_wallet(request.user)
+    country_code = _user_country_code(request.user)
 
     if request.method == "POST":
         form = WithdrawalRequestForm(request.POST)
         if form.is_valid():
             try:
+                provider = form.cleaned_data["provider"]
+                if (
+                    provider == WithdrawalProvider.MPESA
+                    and not has_successful_mpesa_verification(request.user)
+                ):
+                    initiate_mpesa_account_verification(user=request.user)
+                    messages.info(
+                        request,
+                        "An M-Pesa verification prompt was sent to your phone. "
+                        "Complete it, then return here to submit your withdrawal.",
+                    )
+                    return redirect("withdrawals:request")
                 w = request_withdrawal(
                     user=request.user,
-                    amount=form.cleaned_data["amount_ksh"],
-                    destination_phone=form.cleaned_data["destination_phone"],
+                    amount=form.cleaned_data["amount"],
+                    provider=provider,
+                    destination_phone=form.cleaned_data.get("destination_phone") or "",
+                    destination_email=form.cleaned_data.get("destination_email") or "",
                 )
-                messages.success(request, f"Withdrawal request for KSh {w.amount_ksh} submitted.")
+                messages.success(request, f"Withdrawal request for ${w.amount} submitted.")
                 return redirect("withdrawals:detail", pk=w.pk)
-            except WithdrawalError as e:
+            except (PayHeroError, WithdrawalError) as e:
                 messages.error(request, str(e))
     else:
         initial = {}
         if request.user.phone_number:
             initial["destination_phone"] = request.user.phone_number
+        if country_code == "KE":
+            initial["provider"] = WithdrawalProvider.MPESA
+        elif country_code:
+            initial["provider"] = WithdrawalProvider.PAYPAL
         form = WithdrawalRequestForm(initial=initial)
 
     return render(request, "reviewer/withdrawal_request.html", {
@@ -54,7 +96,10 @@ def request_withdrawal_view(request):
         "nav_active": "wallet",
         "wallet": wallet,
         "form": form,
-        "min_amount": 50,
+        "min_amount": settings.MIN_WITHDRAWAL_USD,
+        "user_country_code": country_code,
+        "mpesa_fee": PlatformSettings.get_solo().mpesa_account_verification_fee_usd,
+        "mpesa_verified": has_successful_mpesa_verification(request.user),
     })
 
 
@@ -98,6 +143,7 @@ def admin_withdrawal_queue(request):
 
 
 @admin_required
+@require_POST
 def admin_withdrawal_action(request, pk, action):
     withdrawal = get_object_or_404(Withdrawal, pk=pk)
     try:

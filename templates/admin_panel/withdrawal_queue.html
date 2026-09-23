@@ -10,6 +10,7 @@
         <div class="card-body">
             <h6 class="mb-3">Pending ({{ pending|length }})</h6>
             {% if pending %}
+                <p class="text-muted small d-md-none">Swipe horizontally to see all columns.</p>
                 <div class="table-responsive">
                     <table class="table table-hover align-middle mb-0">
                         <thead class="table-light">
@@ -18,7 +19,8 @@
                                 <th>User</th>
                                 <th>Amount</th>
                                 <th>Net</th>
-                                <th>Phone</th>
+                                <th>Method</th>
+                                <th>Destination</th>
                                 <th>Status</th>
                                 <th>Actions</th>
                             </tr>
@@ -28,9 +30,13 @@
                             <tr>
                                 <td><small>{{ w.requested_at|date:"M d, H:i" }}</small></td>
                                 <td>{{ w.user.email }}</td>
-                                <td>KSh {{ w.amount_ksh }}</td>
-                                <td>KSh {{ w.net_amount_ksh }}</td>
-                                <td>{{ w.destination_phone }}</td>
+                                <td>${{ w.amount }}</td>
+                                <td>${{ w.net_amount }}</td>
+                                <td>{{ w.get_provider_display }}</td>
+                                <td>
+                                    {% if w.destination_phone %}{{ w.destination_phone }}{% endif %}
+                                    {% if w.destination_email %}{{ w.destination_email }}{% endif %}
+                                </td>
                                 <td>
                                     {% if w.status == "PENDING" %}<span class="badge bg-warning text-dark">Pending</span>
                                     {% elif w.status == "PROCESSING" %}<span class="badge bg-info text-dark">Processing</span>
@@ -86,7 +92,7 @@
                             <tr>
                                 <td><small>{{ w.requested_at|date:"M d, H:i" }}</small></td>
                                 <td>{{ w.user.email }}</td>
-                                <td>KSh {{ w.amount_ksh }}</td>
+                                <td>${{ w.amount }}</td>
                                 <td><span class="badge bg-secondary">{{ w.get_status_display }}</span></td>
                                 <td><small>{{ w.provider_reference|default:"—" }}</small></td>
                             </tr>

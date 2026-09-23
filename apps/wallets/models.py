@@ -8,6 +8,8 @@ class TransactionType(models.TextChoices):
     TASK_REWARD = "TASK_REWARD", "Task reward"
     WITHDRAWAL = "WITHDRAWAL", "Withdrawal"
     WITHDRAWAL_REVERSAL = "WITHDRAWAL_REVERSAL", "Withdrawal reversal"
+    PHONE_VERIFICATION_DEPOSIT = "PHONE_VERIFICATION_DEPOSIT", "Phone verification deposit"
+    PREMIUM_UNLOCK = "PREMIUM_UNLOCK", "Premium unlock"
     REFUND = "REFUND", "Refund"
     ADJUSTMENT = "ADJUSTMENT", "Adjustment"
     BONUS = "BONUS", "Bonus"
@@ -21,11 +23,11 @@ class Wallet(models.Model):
         on_delete=models.CASCADE,
         related_name="wallet",
     )
-    available_balance_ksh = models.DecimalField(max_digits=12, decimal_places=2, default=0)
-    pending_balance_ksh = models.DecimalField(max_digits=12, decimal_places=2, default=0)
-    lifetime_earnings_ksh = models.DecimalField(max_digits=12, decimal_places=2, default=0)
-    lifetime_withdrawn_ksh = models.DecimalField(max_digits=12, decimal_places=2, default=0)
-    currency = models.CharField(max_length=3, default="KES")
+    available_balance = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    pending_balance = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    lifetime_earnings = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    lifetime_withdrawn = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    currency = models.CharField(max_length=3, default="USD")
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -33,17 +35,17 @@ class Wallet(models.Model):
     class Meta:
         constraints = [
             models.CheckConstraint(
-                condition=models.Q(available_balance_ksh__gte=0),
+                condition=models.Q(available_balance__gte=0),
                 name="wallet_available_nonneg",
             ),
             models.CheckConstraint(
-                condition=models.Q(pending_balance_ksh__gte=0),
+                condition=models.Q(pending_balance__gte=0),
                 name="wallet_pending_nonneg",
             ),
         ]
 
     def __str__(self):
-        return f"{self.user.email} — KSh {self.available_balance_ksh}"
+        return f"{self.user.email} — ${self.available_balance}"
 
 
 class WalletTransaction(models.Model):
@@ -53,12 +55,12 @@ class WalletTransaction(models.Model):
     """
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     wallet = models.ForeignKey(Wallet, on_delete=models.PROTECT, related_name="transactions")
-    transaction_type = models.CharField(max_length=24, choices=TransactionType.choices)
-    amount_ksh = models.DecimalField(
+    transaction_type = models.CharField(max_length=32, choices=TransactionType.choices)
+    amount = models.DecimalField(
         max_digits=12, decimal_places=2,
-        help_text="Signed: positive = credit, negative = debit.",
+        help_text="Signed USD: positive = credit, negative = debit.",
     )
-    balance_after_ksh = models.DecimalField(max_digits=12, decimal_places=2)
+    balance_after = models.DecimalField(max_digits=12, decimal_places=2)
     reference_type = models.CharField(max_length=40, blank=True)
     reference_id = models.UUIDField(null=True, blank=True)
     description = models.CharField(max_length=240, blank=True)
@@ -73,5 +75,5 @@ class WalletTransaction(models.Model):
         ]
 
     def __str__(self):
-        sign = "+" if self.amount_ksh >= 0 else ""
-        return f"{sign}{self.amount_ksh} {self.transaction_type} → {self.wallet.user.email}"
+        sign = "+" if self.amount >= 0 else ""
+        return f"{sign}{self.amount} {self.transaction_type} → {self.wallet.user.email}"

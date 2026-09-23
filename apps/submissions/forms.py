@@ -6,26 +6,24 @@ from apps.campaigns.models import Campaign, CampaignQuestion, CampaignQuestionTy
 class DynamicQuestionForm(forms.Form):
     """
     Builds one form field per campaign question at __init__ time.
-    Also includes overall rating, written feedback, and experience date.
+    Also includes overall rating and written feedback.
     """
 
     overall_rating = forms.ChoiceField(
         choices=[(i, f"{i} ★") for i in range(1, 6)],
-        widget=forms.RadioSelect(attrs={"class": "form-check-input"}),
+        widget=forms.RadioSelect(attrs={
+            "class": "h-5 w-5 border-2 border-slate-300 text-emerald-700 focus:ring-2 focus:ring-emerald-200",
+        }),
         label="Overall rating",
     )
     written_feedback = forms.CharField(
         widget=forms.Textarea(attrs={
-            "class": "form-control", "rows": 5,
+            "class": "block w-full rounded-xl border-2 border-slate-300 bg-white px-4 py-3 text-base text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-emerald-700 focus:ring-4 focus:ring-emerald-100",
+            "rows": 5,
             "placeholder": "Tell us about your experience in your own words.",
         }),
         label="Written feedback",
     )
-    experience_date = forms.DateField(
-        widget=forms.DateInput(attrs={"class": "form-control", "type": "date"}),
-        label="Date of experience",
-    )
-
     def __init__(self, *args, campaign: Campaign, **kwargs):
         super().__init__(*args, **kwargs)
         self.campaign = campaign
@@ -37,7 +35,9 @@ class DynamicQuestionForm(forms.Form):
 
     def _build_field(self, q: CampaignQuestion):
         required = q.is_required
-        common_attrs = {"class": "form-control"}
+        common_attrs = {
+            "class": "block w-full rounded-xl border-2 border-slate-300 bg-white px-4 py-3 text-base text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-emerald-700 focus:ring-4 focus:ring-emerald-100",
+        }
 
         if q.question_type == CampaignQuestionType.TEXT:
             return forms.CharField(
@@ -58,27 +58,35 @@ class DynamicQuestionForm(forms.Form):
             return forms.ChoiceField(
                 required=required, label=q.text,
                 choices=[("Yes", "Yes"), ("No", "No")],
-                widget=forms.RadioSelect(attrs={"class": "form-check-input"}),
+                widget=forms.RadioSelect(attrs={
+                    "class": "h-5 w-5 border-2 border-slate-300 text-emerald-700 focus:ring-2 focus:ring-emerald-200",
+                }),
             )
         if q.question_type == CampaignQuestionType.RATING:
             return forms.ChoiceField(
                 required=required, label=q.text,
                 choices=[(str(i), f"{i} ★") for i in range(1, 6)],
-                widget=forms.RadioSelect(attrs={"class": "form-check-input"}),
+                widget=forms.RadioSelect(attrs={
+                    "class": "h-5 w-5 border-2 border-slate-300 text-emerald-700 focus:ring-2 focus:ring-emerald-200",
+                }),
             )
         if q.question_type == CampaignQuestionType.SINGLE_CHOICE:
             choices = [(opt, opt) for opt in (q.options or [])]
             return forms.ChoiceField(
                 required=required, label=q.text,
                 choices=choices,
-                widget=forms.Select(attrs={"class": "form-select"}),
+                widget=forms.Select(attrs={
+                    "class": "block w-full rounded-xl border-2 border-slate-300 bg-white px-4 py-3 text-base text-slate-900 shadow-sm outline-none transition focus:border-emerald-700 focus:ring-4 focus:ring-emerald-100",
+                }),
             )
         if q.question_type == CampaignQuestionType.MULTI_CHOICE:
             choices = [(opt, opt) for opt in (q.options or [])]
             return forms.MultipleChoiceField(
                 required=required, label=q.text,
                 choices=choices,
-                widget=forms.CheckboxSelectMultiple(attrs={"class": "form-check-input"}),
+                widget=forms.CheckboxSelectMultiple(attrs={
+                    "class": "h-5 w-5 rounded border-2 border-slate-300 text-emerald-700 focus:ring-2 focus:ring-emerald-200",
+                }),
             )
         return forms.CharField(
             required=required, label=q.text,

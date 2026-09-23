@@ -41,13 +41,12 @@ class Submission(models.Model):
         help_text="Reviewer's written account of their experience.",
     )
 
-    experience_date = models.DateField(null=True, blank=True)
     submitted_at = models.DateTimeField(null=True, blank=True)
     verified_at = models.DateTimeField(null=True, blank=True)
 
-    reward_amount_ksh = models.DecimalField(
+    reward_amount = models.DecimalField(
         max_digits=10, decimal_places=2, default=0,
-        help_text="Snapshot of the reward at submission time.",
+        help_text="Snapshot of the reward in USD at submission time.",
     )
 
     rejection_reason = models.TextField(blank=True)

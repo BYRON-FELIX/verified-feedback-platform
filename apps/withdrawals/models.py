@@ -17,7 +17,8 @@ class WithdrawalStatus(models.TextChoices):
 
 class WithdrawalProvider(models.TextChoices):
     MPESA = "MPESA", "M-Pesa"
-    AIRTEL = "AIRTEL", "Airtel Money"
+    PAYPAL = "PAYPAL", "PayPal"
+    CARD = "CARD", "Card"
     MANUAL = "MANUAL", "Manual"
 
 
@@ -30,10 +31,10 @@ class Withdrawal(models.Model):
         related_name="withdrawals",
     )
 
-    amount_ksh = models.DecimalField(max_digits=12, decimal_places=2)
-    fee_ksh = models.DecimalField(max_digits=12, decimal_places=2, default=0)
-    tax_withheld_ksh = models.DecimalField(max_digits=12, decimal_places=2, default=0)
-    net_amount_ksh = models.DecimalField(max_digits=12, decimal_places=2)
+    amount = models.DecimalField(max_digits=12, decimal_places=2)
+    fee = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    tax_withheld = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    net_amount = models.DecimalField(max_digits=12, decimal_places=2)
 
     status = models.CharField(
         max_length=16, choices=WithdrawalStatus.choices, default=WithdrawalStatus.PENDING
@@ -41,7 +42,8 @@ class Withdrawal(models.Model):
     provider = models.CharField(
         max_length=16, choices=WithdrawalProvider.choices, default=WithdrawalProvider.MPESA
     )
-    destination_phone = models.CharField(max_length=20)
+    destination_phone = models.CharField(max_length=20, blank=True)
+    destination_email = models.EmailField(blank=True)
 
     provider_reference = models.CharField(max_length=80, blank=True)
     provider_response = models.JSONField(default=dict, blank=True)
@@ -67,14 +69,14 @@ class Withdrawal(models.Model):
         ]
         constraints = [
             models.CheckConstraint(
-                condition=models.Q(amount_ksh__gt=0),
+                condition=models.Q(amount__gt=0),
                 name="withdrawal_amount_positive",
             ),
             models.CheckConstraint(
-                condition=models.Q(net_amount_ksh__gt=0),
+                condition=models.Q(net_amount__gt=0),
                 name="withdrawal_net_positive",
             ),
         ]
 
     def __str__(self):
-        return f"{self.user.email} — KSh {self.amount_ksh} ({self.status})"
+        return f"{self.user.email} — ${self.amount} ({self.status})"

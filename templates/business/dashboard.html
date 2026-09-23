@@ -1,57 +1,50 @@
 {% extends "layouts/dashboard.html" %}
 
 {% block title %}Business Dashboard · VerifiedFeedback{% endblock %}
-{% block side_label %}Business{% endblock %}
-
-{% block sidebar %}
-    <li><a class="nav-link active" href="/business/"><i class="bi bi-speedometer2"></i> Dashboard</a></li>
-    <li><a class="nav-link" href="/campaigns/business/"><i class="bi bi-megaphone"></i> Campaigns</a></li>
-    <li><a class="nav-link" href="#"><i class="bi bi-inbox"></i> Submissions</a></li>
-    <li><a class="nav-link" href="#"><i class="bi bi-graph-up"></i> Analytics</a></li>
-    <li><a class="nav-link" href="/business/profile/"><i class="bi bi-building"></i> Profile</a></li>
-{% endblock %}
-
 {% block heading_actions %}
     <a href="{% url 'campaigns:business_create' %}" class="btn btn-primary">
-        <i class="bi bi-plus-lg"></i> New Campaign
+        <i class="bi bi-plus-lg me-2"></i> New campaign
     </a>
 {% endblock %}
 
 {% block dashboard_content %}
+<div class="page-intro mb-4">
+    <div><div class="page-kicker">Business workspace</div><h1 class="section-heading">Build better feedback loops.</h1><p class="text-muted mb-0">Launch focused campaigns and learn what customers actually experience.</p></div>
+</div>
 {% if not business %}
     <div class="alert alert-warning">
         You need to complete your business profile before you can create campaigns.
-        <a href="/business/profile/" class="alert-link">Set up business profile →</a>
+        <a href="{% url 'businesses:profile' %}" class="alert-link">Set up business profile →</a>
     </div>
 {% endif %}
 
 <div class="row g-3 mb-4">
-    <div class="col-md-3">
-        <div class="card border-0 shadow-sm">
+    <div class="col-6 col-md-3">
+        <div class="card metric-card h-100">
             <div class="card-body">
                 <div class="text-muted small">Active campaigns</div>
                 <div class="fs-4 fw-bold">0</div>
             </div>
         </div>
     </div>
-    <div class="col-md-3">
-        <div class="card border-0 shadow-sm">
+    <div class="col-6 col-md-3">
+        <div class="card metric-card h-100">
             <div class="card-body">
                 <div class="text-muted small">Submissions</div>
                 <div class="fs-4 fw-bold">0</div>
             </div>
         </div>
     </div>
-    <div class="col-md-3">
-        <div class="card border-0 shadow-sm">
+    <div class="col-6 col-md-3">
+        <div class="card metric-card h-100">
             <div class="card-body">
                 <div class="text-muted small">Spent</div>
-                <div class="fs-4 fw-bold">KSh 0</div>
+                <div class="fs-4 fw-bold text-break">KSh 0</div>
             </div>
         </div>
     </div>
-    <div class="col-md-3">
-        <div class="card border-0 shadow-sm">
+    <div class="col-6 col-md-3">
+        <div class="card metric-card h-100">
             <div class="card-body">
                 <div class="text-muted small">Avg. rating</div>
                 <div class="fs-4 fw-bold">—</div>
@@ -60,13 +53,16 @@
     </div>
 </div>
 
-<div class="card border-0 shadow-sm">
-    <div class="card-body">
-        <h5 class="mb-3">Your campaigns</h5>
+<div class="card">
+    <div class="card-body empty-state">
+        <i class="bi bi-megaphone"></i>
+        <h5>Your campaigns</h5>
         <p class="text-muted mb-0">
             You haven't launched any campaigns yet.
-            <a href="{% url 'campaigns:business_create' %}">Create your first campaign →</a>
         </p>
+        <a href="{% url 'campaigns:business_create' %}" class="btn btn-primary mt-3">
+            <i class="bi bi-plus-lg"></i> Create your first campaign
+        </a>
     </div>
 </div>
 {% endblock %}

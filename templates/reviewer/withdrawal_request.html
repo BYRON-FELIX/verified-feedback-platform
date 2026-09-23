@@ -1,47 +1,56 @@
 {% extends "layouts/dashboard.html" %}
 
 {% block title %}Request withdrawal · VerifiedFeedback{% endblock %}
-{% block side_label %}Reviewer{% endblock %}
-
-{% block sidebar %}
-    <li><a class="nav-link" href="/reviewer/"><i class="bi bi-speedometer2"></i> Dashboard</a></li>
-    <li><a class="nav-link" href="/campaigns/reviewer/"><i class="bi bi-search"></i> Find Tasks</a></li>
-    <li><a class="nav-link" href="{% url 'campaigns:reviewer_my_applications' %}"><i class="bi bi-inbox"></i> My Applications</a></li>
-    <li><a class="nav-link" href="{% url 'submissions:mine' %}"><i class="bi bi-file-earmark-text"></i> My Submissions</a></li>
-    <li><a class="nav-link active" href="{% url 'withdrawals:wallet' %}"><i class="bi bi-wallet2"></i> Wallet</a></li>
-    <li><a class="nav-link" href="{% url 'reviewers:profile' %}"><i class="bi bi-person"></i> Profile</a></li>
-{% endblock %}
-
 {% block dashboard_content %}
 <div class="row justify-content-center">
-    <div class="col-md-7">
+    <div class="col-12 col-md-8 col-lg-6">
         <div class="card border-0 shadow-sm">
-            <div class="card-body p-4">
-                <h5 class="mb-3">Request a withdrawal</h5>
-                <p class="text-muted small">
-                    Available balance: <strong>KSh {{ wallet.available_balance_ksh }}</strong> ·
-                    Minimum: <strong>KSh {{ min_amount }}</strong>
+            <div class="card-body">
+                <h6 class="mb-3">Request a withdrawal</h6>
+                <p class="text-muted small mb-4">
+                    Available: <strong>${{ wallet.available_balance }}</strong> ·
+                    Minimum: <strong>${{ min_amount }}</strong>
                 </p>
+
+                <div class="alert alert-info small">
+                    Select your withdrawal method below. M-Pesa requires a one-time
+                    account verification payment of <strong>${{ mpesa_fee }}.</strong>
+                    <p>PayPal and card withdrawals do not require this fee.</p>
+                </div>
+                {% if not user_country_code %}
+                    <div class="alert alert-warning small">
+                        We couldn't determine your country. Please update your profile first.
+                    </div>
+                {% endif %}
 
                 <form method="post" novalidate>
                     {% csrf_token %}
                     <div class="mb-3">
-                        <label class="form-label">{{ form.amount_ksh.label }}</label>
-                        {{ form.amount_ksh }}
-                        {% if form.amount_ksh.errors %}<div class="text-danger small">{{ form.amount_ksh.errors.0 }}</div>{% endif %}
+                        <label class="form-label">{{ form.amount.label }}</label>
+                        {{ form.amount }}
+                        {% if form.amount.errors %}<div class="text-danger small">{{ form.amount.errors.0 }}</div>{% endif %}
                     </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">{{ form.provider.label }}</label>
+                        {{ form.provider }}
+                        <div id="providerHelp" class="form-text"></div>
+                    </div>
+
                     <div class="mb-3">
                         <label class="form-label">{{ form.destination_phone.label }}</label>
                         {{ form.destination_phone }}
                         <div class="form-text">Format: +254712345678</div>
-                        {% if form.destination_phone.errors %}<div class="text-danger small">{{ form.destination_phone.errors.0 }}</div>{% endif %}
                     </div>
 
-                    <div class="alert alert-light border small">
-                        Withholding tax will be deducted from your requested amount. You'll see the final figure on the next page.
+                    <div class="mb-3">
+                        <label class="form-label">{{ form.destination_email.label }}</label>
+                        {{ form.destination_email }}
+                        <div class="form-text">Required for non-M-Pesa withdrawals.</div>
                     </div>
 
-                    <div class="d-flex justify-content-between">
+
+                    <div class="form-actions mt-3">
                         <a href="{% url 'withdrawals:wallet' %}" class="btn btn-outline-secondary">Cancel</a>
                         <button type="submit" class="btn btn-primary">Request withdrawal</button>
                     </div>
@@ -50,4 +59,29 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+{{ block.super }}
+<script>
+    (function () {
+        const provider = document.getElementById("id_provider");
+        const phone = document.getElementById("id_destination_phone");
+        const email = document.getElementById("id_destination_email");
+        const help = document.getElementById("providerHelp");
+        if (!provider) return;
+
+        function updateFields() {
+            const isMpesa = provider.value === "MPESA";
+            phone.closest(".mb-3").classList.toggle("d-none", !isMpesa);
+            email.closest(".mb-3").classList.toggle("d-none", isMpesa);
+            help.textContent = isMpesa
+                ? "An M-Pesa verification prompt will be sent before your first M-Pesa withdrawal."
+                : "";
+        }
+
+        provider.addEventListener("change", updateFields);
+        updateFields();
+    })();
+</script>
 {% endblock %}

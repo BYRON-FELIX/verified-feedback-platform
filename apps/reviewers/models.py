@@ -4,7 +4,7 @@ from django.conf import settings
 from django.db import models
 
 from apps.campaigns.models import Category
-from apps.geo.models import County
+from apps.geo.models import Country, County
 
 
 class ReviewerProfile(models.Model):
@@ -16,6 +16,12 @@ class ReviewerProfile(models.Model):
     )
 
     date_of_birth = models.DateField(null=True, blank=True)
+    country = models.ForeignKey(
+        Country,
+        on_delete=models.PROTECT,
+        related_name="reviewer_profiles",
+        help_text="Country where the reviewer is based.",
+    )
     county = models.ForeignKey(
         County, on_delete=models.SET_NULL, null=True, blank=True,
         related_name="reviewer_profiles",
@@ -30,7 +36,12 @@ class ReviewerProfile(models.Model):
     # Trust / activity — updated by services later
     trust_score = models.PositiveSmallIntegerField(default=50)
     total_completed_tasks = models.PositiveIntegerField(default=0)
-    total_earnings_ksh = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    total_earnings = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    premium_unlocked_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        help_text="When the reviewer paid to unlock surveys.",
+    )
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

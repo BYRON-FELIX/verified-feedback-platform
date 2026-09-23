@@ -4,10 +4,7 @@ from django.forms import inlineformset_factory
 from .models import (
     Campaign,
     CampaignQuestion,
-    CampaignQuestionType,
     CampaignRequirement,
-    CampaignType,
-    Category,
 )
 
 
@@ -16,10 +13,10 @@ class CampaignForm(forms.ModelForm):
         model = Campaign
         fields = [
             "title", "category", "campaign_type", "description", "instructions",
-            "reward_amount_ksh", "target_participants",
+            "reward_amount", "target_participants",
             "start_date", "end_date",
             "county", "location_description",
-            "estimated_minutes", "min_days_since_experience",
+            "estimated_minutes",
         ]
         widgets = {
             "title": forms.TextInput(attrs={"class": "form-control"}),
@@ -27,14 +24,15 @@ class CampaignForm(forms.ModelForm):
             "campaign_type": forms.Select(attrs={"class": "form-select"}),
             "description": forms.Textarea(attrs={"class": "form-control", "rows": 4}),
             "instructions": forms.Textarea(attrs={"class": "form-control", "rows": 4}),
-            "reward_amount_ksh": forms.NumberInput(attrs={"class": "form-control", "step": "0.01"}),
+            "reward_amount": forms.NumberInput(attrs={
+                "class": "form-control", "step": "0.01", "placeholder": "2.00",
+            }),
             "target_participants": forms.NumberInput(attrs={"class": "form-control"}),
             "start_date": forms.DateInput(attrs={"class": "form-control", "type": "date"}),
             "end_date": forms.DateInput(attrs={"class": "form-control", "type": "date"}),
             "county": forms.Select(attrs={"class": "form-select"}),
             "location_description": forms.TextInput(attrs={"class": "form-control"}),
             "estimated_minutes": forms.NumberInput(attrs={"class": "form-control"}),
-            "min_days_since_experience": forms.NumberInput(attrs={"class": "form-control"}),
         }
 
     def clean(self):
@@ -53,7 +51,10 @@ RequirementFormSet = inlineformset_factory(
     extra=3,
     can_delete=True,
     widgets={
-        "text": forms.TextInput(attrs={"class": "form-control", "placeholder": "e.g. Must have stayed at the property within the last 30 days"}),
+        "text": forms.TextInput(attrs={
+            "class": "form-control",
+            "placeholder": "e.g. Must have stayed at the property within the last 30 days",
+        }),
         "is_mandatory": forms.CheckboxInput(attrs={"class": "form-check-input"}),
         "order": forms.NumberInput(attrs={"class": "form-control", "style": "width:80px"}),
     },
@@ -71,7 +72,7 @@ QuestionFormSet = inlineformset_factory(
         "question_type": forms.Select(attrs={"class": "form-select"}),
         "options": forms.Textarea(attrs={
             "class": "form-control", "rows": 2,
-            "placeholder": 'For choice types only. One option per line.',
+            "placeholder": "For choice types only. One option per line.",
         }),
         "is_required": forms.CheckboxInput(attrs={"class": "form-check-input"}),
         "order": forms.NumberInput(attrs={"class": "form-control", "style": "width:80px"}),

@@ -1,6 +1,8 @@
 from django import forms
 from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
 
+from apps.geo.models import Country
+
 from .models import User, UserRole
 
 
@@ -65,9 +67,19 @@ class ReviewerSignupForm(BaseSignupForm):
             "placeholder": "+254712345678",
         }),
     )
+    country = forms.ModelChoiceField(
+        queryset=Country.objects.none(),
+        empty_label="Select your country",
+        widget=forms.Select(attrs={"class": "form-select"}),
+        help_text="Used to show relevant tasks and payment options.",
+    )
 
     class Meta(BaseSignupForm.Meta):
-        fields = ("first_name", "last_name", "email", "phone_number")
+        fields = ("first_name", "last_name", "email", "phone_number", "country")
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["country"].queryset = Country.objects.filter(is_active=True)
 
     def clean_phone_number(self):
         phone = (self.cleaned_data.get("phone_number") or "").strip()

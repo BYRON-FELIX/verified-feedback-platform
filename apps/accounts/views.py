@@ -14,7 +14,10 @@ def reviewer_signup(request):
             user = form.save()
             # Ensure profile exists
             from apps.reviewers.models import ReviewerProfile
-            ReviewerProfile.objects.get_or_create(user=user)
+            ReviewerProfile.objects.get_or_create(
+                user=user,
+                defaults={"country": form.cleaned_data["country"]},
+            )
             login(request, user)
             messages.success(request, "Welcome! Your reviewer account is ready.")
             return redirect("/dashboard/")

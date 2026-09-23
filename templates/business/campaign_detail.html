@@ -2,16 +2,6 @@
 {% load humanize %}
 
 {% block title %}{{ campaign.title }} · VerifiedFeedback{% endblock %}
-{% block side_label %}Business{% endblock %}
-
-{% block sidebar %}
-    <li><a class="nav-link" href="/business/"><i class="bi bi-speedometer2"></i> Dashboard</a></li>
-    <li><a class="nav-link active" href="/campaigns/business/"><i class="bi bi-megaphone"></i> Campaigns</a></li>
-    <li><a class="nav-link" href="#"><i class="bi bi-inbox"></i> Submissions</a></li>
-    <li><a class="nav-link" href="#"><i class="bi bi-graph-up"></i> Analytics</a></li>
-    <li><a class="nav-link" href="/business/profile/"><i class="bi bi-building"></i> Profile</a></li>
-{% endblock %}
-
 {% block heading_actions %}
     <a href="{% url 'submissions:business_campaign_submissions' campaign.pk %}" class="btn btn-outline-primary btn-sm">
         View submissions
@@ -42,7 +32,7 @@
         <div class="row g-3 mt-3">
             <div class="col-md-3">
                 <div class="text-muted small">Reward per participant</div>
-                <div class="fw-bold">KSh {{ campaign.reward_amount_ksh|floatformat:0|intcomma }}</div>
+                <div class="fw-bold">${{ campaign.reward_amount }}</div>
             </div>
             <div class="col-md-3">
                 <div class="text-muted small">Slots filled</div>
@@ -50,7 +40,7 @@
             </div>
             <div class="col-md-3">
                 <div class="text-muted small">Total budget</div>
-                <div class="fw-bold">KSh {{ campaign.budget_total_ksh|floatformat:0|intcomma }}</div>
+                <div class="fw-bold">${{ campaign.budget_total }}</div>
             </div>
             <div class="col-md-3">
                 <div class="text-muted small">Dates</div>

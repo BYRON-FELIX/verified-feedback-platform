@@ -1,22 +1,11 @@
 {% extends "layouts/dashboard.html" %}
 
 {% block title %}Withdrawal · VerifiedFeedback{% endblock %}
-{% block side_label %}Reviewer{% endblock %}
-
-{% block sidebar %}
-    <li><a class="nav-link" href="/reviewer/"><i class="bi bi-speedometer2"></i> Dashboard</a></li>
-    <li><a class="nav-link" href="/campaigns/reviewer/"><i class="bi bi-search"></i> Find Tasks</a></li>
-    <li><a class="nav-link" href="{% url 'campaigns:reviewer_my_applications' %}"><i class="bi bi-inbox"></i> My Applications</a></li>
-    <li><a class="nav-link" href="{% url 'submissions:mine' %}"><i class="bi bi-file-earmark-text"></i> My Submissions</a></li>
-    <li><a class="nav-link active" href="{% url 'withdrawals:wallet' %}"><i class="bi bi-wallet2"></i> Wallet</a></li>
-    <li><a class="nav-link" href="{% url 'reviewers:profile' %}"><i class="bi bi-person"></i> Profile</a></li>
-{% endblock %}
-
 {% block dashboard_content %}
 <div class="card border-0 shadow-sm mb-4">
-    <div class="card-body p-4">
-        <div class="d-flex justify-content-between mb-3">
-            <h4 class="mb-0">Withdrawal</h4>
+    <div class="card-body">
+        <div class="d-flex justify-content-between align-items-start mb-3">
+            <h5 class="mb-0">Withdrawal</h5>
             <span class="badge
                 {% if withdrawal.status == 'COMPLETED' %}bg-success
                 {% elif withdrawal.status == 'PENDING' %}bg-warning text-dark
@@ -28,36 +17,52 @@
         </div>
 
         <div class="row g-3">
-            <div class="col-md-3">
+            <div class="col-6 col-md-3">
                 <div class="text-muted small">Amount</div>
-                <div class="fw-bold">KSh {{ withdrawal.amount_ksh }}</div>
+                <div class="fw-bold">${{ withdrawal.amount }}</div>
             </div>
-            <div class="col-md-3">
+            <div class="col-6 col-md-3">
                 <div class="text-muted small">Tax withheld</div>
-                <div class="fw-bold">KSh {{ withdrawal.tax_withheld_ksh }}</div>
+                <div class="fw-bold">${{ withdrawal.tax_withheld }}</div>
             </div>
-            <div class="col-md-3">
+            <div class="col-6 col-md-3">
+                <div class="text-muted small">Fee</div>
+                <div class="fw-bold">${{ withdrawal.fee }}</div>
+            </div>
+            <div class="col-6 col-md-3">
                 <div class="text-muted small">Net to receive</div>
-                <div class="fw-bold">KSh {{ withdrawal.net_amount_ksh }}</div>
+                <div class="fw-bold">${{ withdrawal.net_amount }}</div>
             </div>
-            <div class="col-md-3">
-                <div class="text-muted small">Destination</div>
-                <div class="fw-bold">{{ withdrawal.destination_phone }}</div>
+            <div class="col-12 col-md-3">
+                <div class="text-muted small">Method</div>
+                <div>{{ withdrawal.get_provider_display }}</div>
             </div>
-            <div class="col-md-3">
+            {% if withdrawal.destination_phone %}
+            <div class="col-12 col-md-4">
+                <div class="text-muted small">Destination phone</div>
+                <div>{{ withdrawal.destination_phone }}</div>
+            </div>
+            {% endif %}
+            {% if withdrawal.destination_email %}
+            <div class="col-12 col-md-4">
+                <div class="text-muted small">Destination email</div>
+                <div>{{ withdrawal.destination_email }}</div>
+            </div>
+            {% endif %}
+            <div class="col-12 col-md-3">
                 <div class="text-muted small">Requested</div>
                 <div>{{ withdrawal.requested_at|date:"M d, Y H:i" }}</div>
             </div>
             {% if withdrawal.completed_at %}
-            <div class="col-md-3">
+            <div class="col-12 col-md-3">
                 <div class="text-muted small">Completed</div>
                 <div>{{ withdrawal.completed_at|date:"M d, Y H:i" }}</div>
             </div>
             {% endif %}
             {% if withdrawal.provider_reference %}
-            <div class="col-md-6">
-                <div class="text-muted small">Provider reference</div>
-                <div>{{ withdrawal.provider_reference }}</div>
+            <div class="col-12">
+                <div class="text-muted small">Reference</div>
+                <div class="text-break">{{ withdrawal.provider_reference }}</div>
             </div>
             {% endif %}
         </div>

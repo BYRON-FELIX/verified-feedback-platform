@@ -3,6 +3,12 @@ from django.contrib.auth import update_session_auth_hash
 from django.shortcuts import redirect, render
 
 from apps.common.decorators import reviewer_required
+from apps.common.services import (
+    get_platform_settings,
+    requires_account_verification,
+    surveys_are_locked,
+)
+from apps.geo.models import Country
 from apps.submissions.models import Submission
 from apps.wallets.services import get_or_create_wallet
 
@@ -19,13 +25,20 @@ def dashboard(request):
         "nav_active": "dashboard",
         "wallet": wallet,
         "submission_count": submission_count,
+        "requires_account_verification": requires_account_verification(request.user, wallet),
+        "surveys_locked": surveys_are_locked(request.user, wallet),
+        "platform_settings": get_platform_settings(),
     }
     return render(request, "reviewer/dashboard.html", context)
 
 
 @reviewer_required
 def profile(request):
-    profile, _ = ReviewerProfile.objects.get_or_create(user=request.user)
+    default_country = Country.objects.filter(is_active=True).first()
+    profile, _ = ReviewerProfile.objects.get_or_create(
+        user=request.user,
+        defaults={"country": default_country},
+    )
 
     if request.method == "POST":
         form = ReviewerProfileForm(request.POST, instance=profile, user=request.user)

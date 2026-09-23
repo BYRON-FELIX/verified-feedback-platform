@@ -29,7 +29,7 @@ class QuestionInline(admin.TabularInline):
 class CampaignAdmin(admin.ModelAdmin):
     list_display = (
         "title", "business", "campaign_type", "status",
-        "reward_amount_ksh", "target_participants", "filled_slots",
+        "reward_amount", "target_participants", "filled_slots",
         "start_date", "end_date",
     )
     list_filter = ("status", "campaign_type", "category")

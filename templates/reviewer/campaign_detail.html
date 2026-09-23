@@ -1,57 +1,47 @@
 {% extends "layouts/dashboard.html" %}
-{% load humanize %}
 
 {% block title %}{{ campaign.title }} · VerifiedFeedback{% endblock %}
-{% block side_label %}Reviewer{% endblock %}
-
-{% block sidebar %}
-    <li><a class="nav-link" href="/reviewer/"><i class="bi bi-speedometer2"></i> Dashboard</a></li>
-    <li><a class="nav-link active" href="/campaigns/reviewer/"><i class="bi bi-search"></i> Find Tasks</a></li>
-    <li><a class="nav-link" href="{% url 'campaigns:reviewer_my_applications' %}"><i class="bi bi-inbox"></i> My Applications</a></li>
-    <li><a class="nav-link" href="{% url 'withdrawals:wallet' %}"><i class="bi bi-wallet2"></i> Wallet</a></li>
-    <li><a class="nav-link" href="{% url 'reviewers:profile' %}"><i class="bi bi-person"></i> Profile</a></li>
-{% endblock %}
-
 {% block heading_actions %}
-    <a href="{% url 'campaigns:reviewer_list' %}" class="btn btn-outline-secondary btn-sm">← Back to tasks</a>
+    <a href="{% url 'campaigns:reviewer_list' %}" class="btn btn-outline-secondary btn-sm">← Back</a>
 {% endblock %}
 
 {% block dashboard_content %}
+<div class="page-intro mb-4"><div><div class="page-kicker">Task details</div><h1 class="section-heading">{{ campaign.title }}</h1><p class="text-muted mb-0">{{ campaign.business.name }}{% if campaign.county %} · {{ campaign.county.name }}{% endif %}</p></div></div>
 <div class="card border-0 shadow-sm mb-4">
-    <div class="card-body p-4">
-        <div class="d-flex justify-content-between align-items-start mb-3">
-            <div>
-                <span class="badge bg-secondary-subtle text-secondary-emphasis">{{ campaign.get_campaign_type_display }}</span>
+    <div class="card-body">
+        <div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-3">
+            <div class="flex-grow-1 min-w-0">
+                <span class="badge bg-secondary-subtle text-secondary-emphasis">
+                    {{ campaign.get_campaign_type_display }}
+                </span>
                 {% if campaign.county %}
-                    <span class="badge bg-light text-dark border"><i class="bi bi-geo-alt"></i> {{ campaign.county.name }}</span>
+                    <span class="badge bg-light text-dark border">
+                        <i class="bi bi-geo-alt"></i> {{ campaign.county.name }}
+                    </span>
                 {% endif %}
             </div>
-            <span class="badge bg-success-subtle text-success-emphasis py-2 px-3">
-                Reward: KSh {{ campaign.reward_amount_ksh|floatformat:0|intcomma }}
+            <span class="badge bg-success-subtle text-success-emphasis py-2 px-3 text-nowrap">
+                Reward: ${{ campaign.reward_amount }}
             </span>
         </div>
 
-        <h3 class="mb-1">{{ campaign.title }}</h3>
+        <h3 class="mb-1 text-break">{{ campaign.title }}</h3>
         <p class="text-muted mb-4">{{ campaign.business.name }}</p>
 
         <p>{{ campaign.description }}</p>
 
         <div class="row g-3 my-4">
-            <div class="col-md-3">
+            <div class="col-6 col-md-3">
                 <div class="text-muted small">Estimated time</div>
                 <div class="fw-bold">~{{ campaign.estimated_minutes }} minutes</div>
             </div>
-            <div class="col-md-3">
+            <div class="col-6 col-md-3">
                 <div class="text-muted small">Slots remaining</div>
                 <div class="fw-bold">{{ campaign.slots_remaining }} of {{ campaign.target_participants }}</div>
             </div>
-            <div class="col-md-3">
+            <div class="col-6 col-md-3">
                 <div class="text-muted small">Deadline</div>
                 <div class="fw-bold">{{ campaign.end_date }}</div>
-            </div>
-            <div class="col-md-3">
-                <div class="text-muted small">Experience must be within</div>
-                <div class="fw-bold">{{ campaign.min_days_since_experience }} days</div>
             </div>
         </div>
 
@@ -64,11 +54,14 @@
 
 {% if campaign.requirements.all %}
 <div class="card border-0 shadow-sm mb-4">
-    <div class="card-body p-4">
+    <div class="card-body">
         <h6 class="mb-3">You must meet these requirements</h6>
         <ul class="mb-0">
             {% for r in campaign.requirements.all %}
-                <li>{{ r.text }} {% if r.is_mandatory %}<span class="badge bg-light text-dark border">required</span>{% endif %}</li>
+                <li>
+                    {{ r.text }}
+                    {% if r.is_mandatory %}<span class="badge bg-light text-dark border">required</span>{% endif %}
+                </li>
             {% endfor %}
         </ul>
     </div>
@@ -76,21 +69,18 @@
 {% endif %}
 
 <div class="card border-0 shadow-sm mb-4">
-    <div class="card-body p-4">
+    <div class="card-body">
         <h6 class="mb-3">What you'll be asked to provide</h6>
         <ul class="mb-0 small text-muted">
             <li>Answer {{ campaign.questions.count }} question{{ campaign.questions.count|pluralize }}</li>
             <li>Provide written feedback based on your real experience</li>
-            {% if campaign.required_evidence_types %}
-                <li>Upload evidence: {{ campaign.required_evidence_types|join:", " }}</li>
-            {% endif %}
         </ul>
     </div>
 </div>
 
 <div class="alert alert-light border small">
     <strong>Reminder:</strong> Your reward is for providing genuine feedback, not for a positive rating.
-    You can rate however you feel. This is enforced by platform policy.
+    You can rate however you feel.
 </div>
 
 {% if existing_application %}
@@ -98,11 +88,17 @@
         <div class="alert alert-success">
             <strong>You're in.</strong> You have a slot in this campaign.
             Complete the task and submit your feedback to get paid.
+            {% if not surveys_locked or campaign.campaign_type != "SURVEY" %}
             <div class="mt-3">
                 <a href="{% url 'submissions:start' existing_application.id %}" class="btn btn-success btn-lg">
                     Start submission →
                 </a>
             </div>
+            {% else %}
+            <div class="mt-3">
+                <a href="{% url 'reviewers:dashboard' %}" class="btn btn-primary">Unlock surveys</a>
+            </div>
+            {% endif %}
         </div>
     {% elif existing_application.status == "COMPLETED" %}
         <div class="alert alert-primary">
@@ -123,7 +119,6 @@
 {% elif not campaign.is_open %}
     <div class="alert alert-warning">
         This campaign is {{ campaign.get_status_display|lower }}{% if campaign.slots_remaining == 0 %} (all slots filled){% endif %}.
-        Applications are closed.
     </div>
 {% elif not user.is_authenticated %}
     <div class="d-flex justify-content-end mb-5">
@@ -133,6 +128,12 @@
         </a>
     </div>
 {% else %}
+    {% if surveys_locked and campaign.campaign_type == "SURVEY" %}
+    <div class="alert alert-info">
+        Surveys are locked after you reach the configured earnings threshold.
+        Unlock access from your dashboard to apply.
+    </div>
+    {% else %}
     <div class="d-flex justify-content-end mb-5">
         <form method="post" action="{% url 'campaigns:reviewer_apply' campaign.slug %}">
             {% csrf_token %}
@@ -141,5 +142,6 @@
             </button>
         </form>
     </div>
+    {% endif %}
 {% endif %}
 {% endblock %}

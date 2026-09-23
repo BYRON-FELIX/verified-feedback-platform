@@ -38,21 +38,20 @@ def credit(
         if existing:
             return existing
 
-    # Lock the wallet row
     wallet = Wallet.objects.select_for_update().get(user=user)
 
-    new_available = wallet.available_balance_ksh + amount
-    new_lifetime = wallet.lifetime_earnings_ksh + amount
+    new_available = wallet.available_balance + amount
+    new_lifetime = wallet.lifetime_earnings + amount
 
-    wallet.available_balance_ksh = new_available
-    wallet.lifetime_earnings_ksh = new_lifetime
-    wallet.save(update_fields=["available_balance_ksh", "lifetime_earnings_ksh", "updated_at"])
+    wallet.available_balance = new_available
+    wallet.lifetime_earnings = new_lifetime
+    wallet.save(update_fields=["available_balance", "lifetime_earnings", "updated_at"])
 
     return WalletTransaction.objects.create(
         wallet=wallet,
         transaction_type=transaction_type,
-        amount_ksh=amount,
-        balance_after_ksh=new_available,
+        amount=amount,
+        balance_after=new_available,
         description=description,
         reference_type=reference_type,
         reference_id=reference_id,
@@ -85,21 +84,21 @@ def debit(
 
     wallet = Wallet.objects.select_for_update().get(user=user)
 
-    if wallet.available_balance_ksh < amount:
+    if wallet.available_balance < amount:
         raise InsufficientBalance(
-            f"Wallet balance {wallet.available_balance_ksh} is less than debit {amount}."
+            f"Wallet balance {wallet.available_balance} is less than debit {amount}."
         )
 
-    new_available = wallet.available_balance_ksh - amount
-    wallet.available_balance_ksh = new_available
-    wallet.lifetime_withdrawn_ksh = wallet.lifetime_withdrawn_ksh + amount
-    wallet.save(update_fields=["available_balance_ksh", "lifetime_withdrawn_ksh", "updated_at"])
+    new_available = wallet.available_balance - amount
+    wallet.available_balance = new_available
+    wallet.lifetime_withdrawn = wallet.lifetime_withdrawn + amount
+    wallet.save(update_fields=["available_balance", "lifetime_withdrawn", "updated_at"])
 
     return WalletTransaction.objects.create(
         wallet=wallet,
         transaction_type=transaction_type,
-        amount_ksh=-amount,
-        balance_after_ksh=new_available,
+        amount=-amount,
+        balance_after=new_available,
         description=description,
         reference_type=reference_type,
         reference_id=reference_id,

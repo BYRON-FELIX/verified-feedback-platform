@@ -1,19 +1,9 @@
 {% extends "layouts/dashboard.html" %}
 
 {% block title %}My Applications · VerifiedFeedback{% endblock %}
-{% block side_label %}Reviewer{% endblock %}
-
-{% block sidebar %}
-    <li><a class="nav-link" href="/reviewer/"><i class="bi bi-speedometer2"></i> Dashboard</a></li>
-    <li><a class="nav-link" href="/campaigns/reviewer/"><i class="bi bi-search"></i> Find Tasks</a></li>
-    <li><a class="nav-link active" href="/campaigns/reviewer/my-applications/"><i class="bi bi-inbox"></i> My Applications</a></li>
-    <li><a class="nav-link" href="{% url 'withdrawals:wallet' %}"><i class="bi bi-wallet2"></i> Wallet</a></li>
-    <li><a class="nav-link" href="{% url 'reviewers:profile' %}"><i class="bi bi-person"></i> Profile</a></li>
-{% endblock %}
-
 {% block dashboard_content %}
 {% if applications %}
-    <div class="card border-0 shadow-sm">
+    <div class="card border-0 shadow-sm d-none d-md-block">
         <div class="table-responsive">
             <table class="table table-hover align-middle mb-0">
                 <thead class="table-light">
@@ -31,7 +21,7 @@
                     <tr>
                         <td><strong>{{ a.campaign.title }}</strong></td>
                         <td>{{ a.campaign.business.name }}</td>
-                        <td>KSh {{ a.campaign.reward_amount_ksh }}</td>
+                        <td>${{ a.campaign.reward_amount }}</td>
                         <td>
                             {% if a.status == "ACCEPTED" %}<span class="badge bg-success">Accepted</span>
                             {% elif a.status == "APPLIED" %}<span class="badge bg-info text-dark">Applied</span>
@@ -40,7 +30,7 @@
                             {% elif a.status == "COMPLETED" %}<span class="badge bg-primary">Completed</span>
                             {% endif %}
                         </td>
-                        <td><small class="text-muted">{{ a.applied_at|date:"M d, Y H:i" }}</small></td>
+                        <td><small class="text-muted">{{ a.applied_at|date:"M d, Y" }}</small></td>
                         <td>
                             {% if a.status == "ACCEPTED" %}
                                 <a href="{% url 'submissions:start' a.id %}" class="btn btn-sm btn-success">
@@ -62,13 +52,50 @@
             </table>
         </div>
     </div>
+
+    <div class="d-md-none">
+        {% for a in applications %}
+            <div class="list-card">
+                <div class="list-card-title">{{ a.campaign.title }}</div>
+                <div class="list-card-sub">{{ a.campaign.business.name }}</div>
+                <div class="list-card-row">
+                    <span class="label">Status</span>
+                    <span class="value">
+                        {% if a.status == "ACCEPTED" %}<span class="badge bg-success">Accepted</span>
+                        {% elif a.status == "APPLIED" %}<span class="badge bg-info text-dark">Applied</span>
+                        {% elif a.status == "REJECTED" %}<span class="badge bg-danger">Rejected</span>
+                        {% elif a.status == "WITHDRAWN" %}<span class="badge bg-secondary">Withdrawn</span>
+                        {% elif a.status == "COMPLETED" %}<span class="badge bg-primary">Completed</span>
+                        {% endif %}
+                    </span>
+                </div>
+                <div class="list-card-row">
+                    <span class="label">Reward</span>
+                    <span class="value">${{ a.campaign.reward_amount }}</span>
+                </div>
+                <div class="list-card-row">
+                    <span class="label">Applied</span>
+                    <span class="value">{{ a.applied_at|date:"M d, Y" }}</span>
+                </div>
+                <div class="list-card-actions">
+                    {% if a.status == "ACCEPTED" %}
+                        <a href="{% url 'submissions:start' a.id %}" class="btn btn-success btn-sm">Start submission</a>
+                    {% elif a.status == "COMPLETED" %}
+                        <a href="{% url 'submissions:mine' %}" class="btn btn-outline-primary btn-sm">View submission</a>
+                    {% else %}
+                        <a href="{% url 'campaigns:reviewer_detail' a.campaign.slug %}" class="btn btn-outline-dark btn-sm">View campaign</a>
+                    {% endif %}
+                </div>
+            </div>
+        {% endfor %}
+    </div>
 {% else %}
     <div class="card border-0 shadow-sm">
-        <div class="card-body text-center py-5">
-            <i class="bi bi-inbox fs-1 text-muted"></i>
-            <h5 class="mt-3">No applications yet</h5>
+        <div class="card-body empty-state">
+            <i class="bi bi-inbox"></i>
+            <h5>No applications yet</h5>
             <p class="text-muted">Browse available tasks and apply to get started.</p>
-            <a href="/campaigns/reviewer/" class="btn btn-primary">Find tasks</a>
+            <a href="{% url 'campaigns:reviewer_list' %}" class="btn btn-primary">Find tasks</a>
         </div>
     </div>
 {% endif %}

@@ -12,7 +12,7 @@ class SubmissionAnswerInline(admin.TabularInline):
 @admin.register(Submission)
 class SubmissionAdmin(admin.ModelAdmin):
     list_display = ("campaign", "reviewer", "status", "overall_rating",
-                    "reward_amount_ksh", "submitted_at", "verified_at")
+                    "reward_amount", "submitted_at", "verified_at")
     list_filter = ("status",)
     search_fields = ("campaign__title", "reviewer__email")
     inlines = [SubmissionAnswerInline]

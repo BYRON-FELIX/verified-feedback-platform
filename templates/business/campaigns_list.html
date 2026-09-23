@@ -2,16 +2,6 @@
 {% load humanize %}
 
 {% block title %}Campaigns · VerifiedFeedback{% endblock %}
-{% block side_label %}Business{% endblock %}
-
-{% block sidebar %}
-    <li><a class="nav-link" href="/business/"><i class="bi bi-speedometer2"></i> Dashboard</a></li>
-    <li><a class="nav-link active" href="/campaigns/business/"><i class="bi bi-megaphone"></i> Campaigns</a></li>
-    <li><a class="nav-link" href="#"><i class="bi bi-inbox"></i> Submissions</a></li>
-    <li><a class="nav-link" href="#"><i class="bi bi-graph-up"></i> Analytics</a></li>
-    <li><a class="nav-link" href="/business/profile/"><i class="bi bi-building"></i> Profile</a></li>
-{% endblock %}
-
 {% block heading_actions %}
     <a href="{% url 'campaigns:business_create' %}" class="btn btn-primary">
         <i class="bi bi-plus-lg"></i> New Campaign
@@ -21,7 +11,7 @@
 {% block dashboard_content %}
 {% if not business %}
     <div class="alert alert-warning">
-        Complete your <a href="/business/profile/" class="alert-link">business profile</a> first.
+        Complete your <a href="{% url 'businesses:profile' %}" class="alert-link">business profile</a> first.
     </div>
 {% else %}
     {% if campaigns %}
@@ -59,7 +49,7 @@
                                     <span class="badge bg-danger">{{ c.get_status_display }}</span>
                                 {% endif %}
                             </td>
-                            <td class="text-end">KSh {{ c.reward_amount_ksh|floatformat:0|intcomma }}</td>
+                            <td class="text-end">${{ c.reward_amount }}</td>
                             <td class="text-end">{{ c.filled_slots }}/{{ c.target_participants }}</td>
                             <td><small class="text-muted">{{ c.start_date }} → {{ c.end_date }}</small></td>
                             <td class="text-end">

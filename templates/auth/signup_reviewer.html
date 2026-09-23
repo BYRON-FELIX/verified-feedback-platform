@@ -3,12 +3,13 @@
 {% block title %}Join as a reviewer · VerifiedFeedback{% endblock %}
 
 {% block content %}
-<div class="container py-5">
+<div class="auth-page container py-5">
     <div class="row justify-content-center">
         <div class="col-md-6">
-            <div class="card shadow-sm border-0">
+            <div class="auth-card card">
                 <div class="card-body p-4">
-                    <h3 class="mb-1">Join as a reviewer</h3>
+                    <div class="page-kicker mb-2">Start earning</div>
+                    <h1 class="h3 mb-1">Join as a reviewer</h1>
                     <p class="text-muted small mb-4">
                         Earn rewards for sharing genuine feedback on real experiences.
                     </p>
@@ -43,6 +44,14 @@
                                 <div class="form-text">{{ form.phone_number.help_text }}</div>
                                 {% if form.phone_number.errors %}
                                     <div class="text-danger small">{{ form.phone_number.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label">Country</label>
+                                {{ form.country }}
+                                <div class="form-text">{{ form.country.help_text }}</div>
+                                {% if form.country.errors %}
+                                    <div class="text-danger small">{{ form.country.errors.0 }}</div>
                                 {% endif %}
                             </div>
                             <div class="col-md-6">

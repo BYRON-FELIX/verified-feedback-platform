@@ -1,26 +1,17 @@
 {% extends "layouts/dashboard.html" %}
-{% load humanize %}
 
 {% block title %}Find Tasks · VerifiedFeedback{% endblock %}
-{% block side_label %}Reviewer{% endblock %}
-
-{% block sidebar %}
-    <li><a class="nav-link" href="/reviewer/"><i class="bi bi-speedometer2"></i> Dashboard</a></li>
-    <li><a class="nav-link active" href="/campaigns/reviewer/"><i class="bi bi-search"></i> Find Tasks</a></li>
-    <li><a class="nav-link" href="{% url 'campaigns:reviewer_my_applications' %}"><i class="bi bi-inbox"></i> My Applications</a></li>
-    <li><a class="nav-link" href="{% url 'withdrawals:wallet' %}"><i class="bi bi-wallet2"></i> Wallet</a></li>
-    <li><a class="nav-link" href="{% url 'reviewers:profile' %}"><i class="bi bi-person"></i> Profile</a></li>
-{% endblock %}
-
 {% block dashboard_content %}
-<form method="get" class="card border-0 shadow-sm mb-4">
+<div class="page-intro mb-4"><div><div class="page-kicker">Explore opportunities</div><h1 class="section-heading">Find tasks worth your time.</h1><p class="text-muted mb-0">Choose a campaign that matches your experience, location, and interests.</p></div></div>
+<form method="get" class="card filter-panel mb-4">
     <div class="card-body">
         <div class="row g-2">
-            <div class="col-md-5">
-                <input type="text" name="q" value="{{ search|default:'' }}" class="form-control" placeholder="Search campaigns...">
+            <div class="col-12 col-md-5">
+                <input type="text" name="q" value="{{ search|default:'' }}" class="form-control"
+                       placeholder="Search campaigns...">
             </div>
-            <div class="col-md-4">
-                <select name="category" class="form-select" title="Filter by category" aria-label="Filter by category">
+            <div class="col-8 col-md-4">
+                <select name="category" class="form-select" aria-label="Filter by category">
                     <option value="">All categories</option>
                     {% for cat in categories %}
                         <option value="{{ cat.id }}" {% if selected_category == cat.id|stringformat:"s" %}selected{% endif %}>
@@ -29,8 +20,8 @@
                     {% endfor %}
                 </select>
             </div>
-            <div class="col-md-3">
-                <button type="submit" class="btn btn-primary w-100">Filter</button>
+            <div class="col-4 col-md-3">
+                <button type="submit" class="btn btn-primary w-100"><i class="bi bi-funnel me-2"></i>Filter</button>
             </div>
         </div>
     </div>
@@ -39,32 +30,44 @@
 {% if campaigns %}
     <div class="row g-3">
         {% for c in campaigns %}
-        <div class="col-md-6">
-            <div class="card border-0 shadow-sm h-100">
+        <div class="col-12 col-md-6">
+            <div class="card task-card h-100">
                 <div class="card-body d-flex flex-column">
-                    <div class="d-flex justify-content-between mb-2">
-                        <span class="badge bg-secondary-subtle text-secondary-emphasis">{{ c.get_campaign_type_display }}</span>
+                    <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
+                        <span class="badge bg-secondary-subtle text-secondary-emphasis">
+                            {{ c.get_campaign_type_display }}
+                        </span>
                         {% if c.county %}
-                            <small class="text-muted"><i class="bi bi-geo-alt"></i> {{ c.county.name }}</small>
+                            <small class="text-muted text-end">
+                                <i class="bi bi-geo-alt"></i> {{ c.county.name }}
+                            </small>
                         {% endif %}
                     </div>
-                    <h6 class="mb-1">{{ c.title }}</h6>
-                    <small class="text-muted mb-3">{{ c.business.name }}</small>
-                    <p class="text-muted small flex-grow-1">{{ c.description|truncatewords:20 }}</p>
 
-                    <div class="d-flex justify-content-between align-items-center mt-2">
-                        <div>
-                            <span class="badge bg-success-subtle text-success-emphasis py-2 px-3">
-                                KSh {{ c.reward_amount_ksh|floatformat:0|intcomma }}
-                            </span>
-                            <small class="text-muted ms-2">~{{ c.estimated_minutes }} min</small>
-                        </div>
-                        <a href="{% url 'campaigns:reviewer_detail' c.slug %}" class="btn btn-sm btn-dark">View</a>
+                    <h6 class="mb-1 text-break">{{ c.title }}</h6>
+                    <small class="text-muted mb-2">{{ c.business.name }}</small>
+                    <p class="text-muted small flex-grow-1 mb-3">
+                        {{ c.description|truncatewords:18 }}
+                    </p>
+
+                    <div class="d-flex flex-wrap gap-2 mb-3">
+                        <span class="badge bg-success-subtle text-success-emphasis py-2 px-3">
+                            ${{ c.reward_amount }}
+                        </span>
+                        <span class="badge bg-light text-dark border">
+                            <i class="bi bi-clock"></i> ~{{ c.estimated_minutes }} min
+                        </span>
+                        <span class="badge bg-light text-dark border">
+                            {{ c.slots_remaining }} slot{{ c.slots_remaining|pluralize }}
+                        </span>
                     </div>
 
-                    <div class="d-flex justify-content-between small text-muted mt-3">
-                        <span>{{ c.slots_remaining }} slots left</span>
-                        <span>Ends {{ c.end_date }}</span>
+                    <div class="d-flex justify-content-between align-items-center mt-auto pt-2 border-top">
+                        <small class="text-muted">Ends {{ c.end_date }}</small>
+                        <a href="{% url 'campaigns:reviewer_detail' c.slug %}"
+                           class="btn btn-sm btn-dark">
+                            View details
+                        </a>
                     </div>
                 </div>
             </div>
@@ -73,9 +76,9 @@
     </div>
 {% else %}
     <div class="card border-0 shadow-sm">
-        <div class="card-body text-center py-5">
-            <i class="bi bi-search fs-1 text-muted"></i>
-            <h5 class="mt-3">No campaigns match your filters</h5>
+        <div class="card-body empty-state">
+            <i class="bi bi-search"></i>
+            <h5>No campaigns match your filters</h5>
             <p class="text-muted">Try clearing the filters or check back later.</p>
         </div>
     </div>

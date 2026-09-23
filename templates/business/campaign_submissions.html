@@ -1,0 +1,90 @@
+{% extends "layouts/dashboard.html" %}
+
+{% block title %}Submissions · {{ campaign.title }}{% endblock %}
+{% block heading_actions %}
+    <a href="{% url 'campaigns:business_detail' campaign.pk %}" class="btn btn-outline-secondary btn-sm">
+        ← Campaign
+    </a>
+{% endblock %}
+
+{% block dashboard_content %}
+{% if submissions %}
+
+    {# ---------- Desktop table ---------- #}
+    <div class="card border-0 shadow-sm d-none d-md-block">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Reviewer</th>
+                        <th>Rating</th>
+                        <th>Status</th>
+                        <th>Submitted</th>
+                        <th>Feedback</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for s in submissions %}
+                    <tr>
+                        <td>Verified Customer #{{ s.reviewer.id|stringformat:"s"|slice:":6" }}</td>
+                        <td>{{ s.overall_rating|default:"—" }}/5</td>
+                        <td>
+                            {% if s.status == "VERIFIED" %}<span class="badge bg-success">Verified</span>
+                            {% elif s.status == "SUBMITTED" %}<span class="badge bg-info text-dark">Submitted</span>
+                            {% elif s.status == "DRAFT" %}<span class="badge bg-secondary">Draft</span>
+                            {% else %}<span class="badge bg-warning text-dark">{{ s.get_status_display }}</span>
+                            {% endif %}
+                        </td>
+                        <td><small class="text-muted">{{ s.submitted_at|default:s.created_at|date:"M d, Y" }}</small></td>
+                        <td><small>{{ s.written_feedback|truncatewords:20 }}</small></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    {# ---------- Mobile cards ---------- #}
+    <div class="d-md-none">
+        {% for s in submissions %}
+            <div class="list-card">
+                <div class="list-card-title">
+                    Verified Customer #{{ s.reviewer.id|stringformat:"s"|slice:":6" }}
+                </div>
+                <div class="list-card-sub">
+                    Rating: {% if s.overall_rating %}{{ s.overall_rating }}/5 ★{% else %}—{% endif %}
+                </div>
+
+                <div class="list-card-row">
+                    <span class="label">Status</span>
+                    <span class="value">
+                        {% if s.status == "VERIFIED" %}<span class="badge bg-success">Verified</span>
+                        {% elif s.status == "SUBMITTED" %}<span class="badge bg-info text-dark">Submitted</span>
+                        {% elif s.status == "DRAFT" %}<span class="badge bg-secondary">Draft</span>
+                        {% else %}<span class="badge bg-warning text-dark">{{ s.get_status_display }}</span>
+                        {% endif %}
+                    </span>
+                </div>
+                <div class="list-card-row">
+                    <span class="label">Submitted</span>
+                    <span class="value">{{ s.submitted_at|default:s.created_at|date:"M d, Y" }}</span>
+                </div>
+
+                <div class="mt-2 pt-2 border-top">
+                    <div class="text-muted small mb-1">Feedback</div>
+                    <div class="small">{{ s.written_feedback|truncatewords:40 }}</div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+
+{% else %}
+    <div class="card border-0 shadow-sm">
+        <div class="card-body empty-state">
+            <i class="bi bi-file-earmark-text"></i>
+            <h5>No submissions yet</h5>
+            <p class="text-muted">Reviewers who complete your campaign will appear here.</p>
+        </div>
+    </div>
+{% endif %}
+{% endblock %}

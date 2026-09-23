@@ -67,15 +67,15 @@ class Campaign(models.Model):
         max_length=24, choices=CampaignStatus.choices, default=CampaignStatus.DRAFT
     )
 
-    reward_amount_ksh = models.DecimalField(
+    # Amounts in USD
+    reward_amount = models.DecimalField(
         max_digits=10, decimal_places=2, validators=[MinValueValidator(0)]
     )
     target_participants = models.PositiveIntegerField(validators=[MinValueValidator(1)])
     filled_slots = models.PositiveIntegerField(default=0)
 
-    # Denormalized budget and fee — computed at creation, editable by admin.
-    budget_total_ksh = models.DecimalField(max_digits=12, decimal_places=2, default=0)
-    platform_fee_ksh = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    budget_total = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    platform_fee = models.DecimalField(max_digits=12, decimal_places=2, default=0)
 
     start_date = models.DateField()
     end_date = models.DateField()
@@ -87,13 +87,6 @@ class Campaign(models.Model):
 
     estimated_minutes = models.PositiveIntegerField(
         default=10, help_text="Estimated time to complete, in minutes."
-    )
-    min_days_since_experience = models.PositiveIntegerField(
-        default=30, help_text="How recent the experience must be."
-    )
-    required_evidence_types = models.JSONField(
-        default=list, blank=True,
-        help_text="List of evidence type codes, e.g. ['RECEIPT', 'PHOTOGRAPH'].",
     )
 
     approved_at = models.DateTimeField(null=True, blank=True)
@@ -140,10 +133,7 @@ class Campaign(models.Model):
 
     @property
     def is_open(self):
-        return (
-            self.status == CampaignStatus.ACTIVE
-            and self.slots_remaining > 0
-        )
+        return self.status == CampaignStatus.ACTIVE and self.slots_remaining > 0
 
 
 class CampaignRequirement(models.Model):

@@ -1,78 +1,84 @@
 {% extends "layouts/dashboard.html" %}
 
 {% block title %}Wallet · VerifiedFeedback{% endblock %}
-{% block side_label %}Reviewer{% endblock %}
-
-{% block sidebar %}
-    <li><a class="nav-link" href="/reviewer/"><i class="bi bi-speedometer2"></i> Dashboard</a></li>
-    <li><a class="nav-link" href="/campaigns/reviewer/"><i class="bi bi-search"></i> Find Tasks</a></li>
-    <li><a class="nav-link" href="{% url 'campaigns:reviewer_my_applications' %}"><i class="bi bi-inbox"></i> My Applications</a></li>
-    <li><a class="nav-link" href="{% url 'submissions:mine' %}"><i class="bi bi-file-earmark-text"></i> My Submissions</a></li>
-    <li><a class="nav-link active" href="{% url 'withdrawals:wallet' %}"><i class="bi bi-wallet2"></i> Wallet</a></li>
-    <li><a class="nav-link" href="{% url 'reviewers:profile' %}"><i class="bi bi-person"></i> Profile</a></li>
+{% block heading_actions %}
+    <a href="{% url 'withdrawals:request' %}" class="btn btn-primary">
+        <i class="bi bi-cash-coin me-2"></i> Withdraw funds
+    </a>
 {% endblock %}
 
 {% block dashboard_content %}
+<div class="page-intro mb-4"><div><div class="page-kicker">Your earnings</div><h1 class="section-heading">Wallet</h1><p class="text-muted mb-0">Track rewards and move your available balance when you're ready.</p></div></div>
 <div class="row g-3 mb-4">
-    <div class="col-md-4">
-        <div class="card border-0 shadow-sm">
+    <div class="col-12 col-md-4">
+        <div class="card metric-card h-100">
             <div class="card-body">
                 <div class="text-muted small">Available balance</div>
-                <div class="fs-3 fw-bold">KSh {{ wallet.available_balance_ksh }}</div>
+                <div class="fs-3 fw-bold text-break">${{ wallet.available_balance }}</div>
             </div>
         </div>
     </div>
-    <div class="col-md-4">
-        <div class="card border-0 shadow-sm">
+    <div class="col-6 col-md-4">
+        <div class="card metric-card h-100">
             <div class="card-body">
-                <div class="text-muted small">Lifetime earnings</div>
-                <div class="fs-3 fw-bold">KSh {{ wallet.lifetime_earnings_ksh }}</div>
+                <div class="text-muted small">Lifetime earned</div>
+                <div class="fs-5 fw-bold text-break">${{ wallet.lifetime_earnings }}</div>
             </div>
         </div>
     </div>
-    <div class="col-md-4">
-        <div class="card border-0 shadow-sm">
+    <div class="col-6 col-md-4">
+        <div class="card metric-card h-100">
             <div class="card-body">
-                <div class="text-muted small">Lifetime withdrawn</div>
-                <div class="fs-3 fw-bold">KSh {{ wallet.lifetime_withdrawn_ksh }}</div>
+                <div class="text-muted small">Withdrawn</div>
+                <div class="fs-5 fw-bold text-break">${{ wallet.lifetime_withdrawn }}</div>
             </div>
         </div>
     </div>
 </div>
 
 <div class="d-flex justify-content-between align-items-center mb-3">
-    <h5 class="mb-0">Recent transactions</h5>
-    <div>
-        <a href="{% url 'withdrawals:list' %}" class="btn btn-outline-secondary btn-sm">Withdrawal history</a>
-        <a href="{% url 'withdrawals:request' %}" class="btn btn-primary btn-sm">Request withdrawal</a>
-    </div>
+    <h6 class="mb-0">Recent transactions</h6>
+    <a href="{% url 'withdrawals:list' %}" class="btn btn-outline-secondary btn-sm">History</a>
 </div>
 
-<div class="card border-0 shadow-sm">
+<div class="card">
     <div class="table-responsive">
         <table class="table table-hover align-middle mb-0">
             <thead class="table-light">
                 <tr>
                     <th>Date</th>
-                    <th>Type</th>
                     <th>Description</th>
                     <th class="text-end">Amount</th>
-                    <th class="text-end">Balance after</th>
+                    <th class="text-end d-none d-md-table-cell">Balance</th>
                 </tr>
             </thead>
             <tbody>
                 {% for tx in transactions %}
                 <tr>
-                    <td><small class="text-muted">{{ tx.created_at|date:"M d, Y H:i" }}</small></td>
-                    <td>{{ tx.get_transaction_type_display }}</td>
-                    <td><small>{{ tx.description }}</small></td>
-                    <td class="text-end {% if tx.amount_ksh >= 0 %}text-success{% else %}text-danger{% endif %}">
-                        {% if tx.amount_ksh >= 0 %}+{% endif %}KSh {{ tx.amount_ksh }}
+                    <td>
+                        <small class="text-muted d-block d-md-none">{{ tx.created_at|date:"M d" }}</small>
+                        <small class="text-muted d-none d-md-block">{{ tx.created_at|date:"M d, Y H:i" }}</small>
                     </td>
-                    <td class="text-end">KSh {{ tx.balance_after_ksh }}</td>
+                    <td>
+                        <div class="text-break">{{ tx.get_transaction_type_display }}</div>
+                    </td>
+                    <td class="text-end {% if tx.amount >= 0 %}text-success{% else %}text-danger{% endif %} fw-semibold">
+                        {% if tx.amount >= 0 %}+{% endif %}${{ tx.amount }}
+                    </td>
+                    <td class="text-end d-none d-md-table-cell">
+                        <small class="text-muted">${{ tx.balance_after }}</small>
+                    </td>
                 </tr>
                 {% empty %}
-                <tr><td colspan="5" class="text-center text-muted py-4">No transactions yet.</td></tr>
+                <tr>
+                    <td colspan="4">
+                        <div class="empty-state">
+                            <i class="bi bi-receipt"></i>
+                            <h6 class="mt-2">No transactions yet</h6>
+                            <p class="text-muted small mb-0">Complete a task to start earning.</p>
+                        </div>
+                    </td>
+                </tr>
                 {% endfor %}
             </tbody>
         </table>

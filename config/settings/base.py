@@ -39,16 +39,17 @@ THIRD_PARTY_APPS = [
 ]
 
 LOCAL_APPS = [
-    "apps.common",
-    "apps.accounts",
-    "apps.geo",
-    "apps.reviewers",
-    "apps.businesses",
-    "apps.campaigns",
-    "apps.wallets",
-    "apps.submissions",
-    "apps.withdrawals",
-    "apps.notifications",
+    "apps.common.apps.CommonConfig",
+    "apps.accounts.apps.AccountsConfig",
+    "apps.geo.apps.GeoConfig",
+    "apps.reviewers.apps.ReviewersConfig",
+    "apps.businesses.apps.BusinessesConfig",
+    "apps.campaigns.apps.CampaignsConfig",
+    "apps.wallets.apps.WalletsConfig",
+    "apps.submissions.apps.SubmissionsConfig",
+    "apps.withdrawals.apps.WithdrawalsConfig",
+    "apps.notifications.apps.NotificationsConfig",
+    "apps.payments.apps.PaymentsConfig",
 ]
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
@@ -150,8 +151,9 @@ SPECTACULAR_SETTINGS = {
     "SERVE_INCLUDE_SCHEMA": False,
 }
 
-# CORS (permissive in dev; tighten in prod)
-CORS_ALLOW_ALL_ORIGINS = True
+# CORS
+# Keep development permissive only when explicitly enabled; production defaults to a safer configuration.
+CORS_ALLOW_ALL_ORIGINS = env.bool("CORS_ALLOW_ALL_ORIGINS", default=False)
 CORS_ALLOW_CREDENTIALS = True
 
 # Email (console in dev)
@@ -162,10 +164,39 @@ DEFAULT_FROM_EMAIL = "no-reply@vfplatform.local"
 SECURE_CONTENT_TYPE_NOSNIFF = True
 X_FRAME_OPTIONS = "DENY"
 
-# Platform config
-PLATFORM_FEE_PERCENTAGE = "25.00"
-WITHHOLDING_TAX_PERCENTAGE = "5.00"
+# ------------------------------------------------------------------
+# Platform config — currency & fees
+# ------------------------------------------------------------------
+from decimal import Decimal  # noqa: E402
+
+# Amounts are stored in USD everywhere.
+# KSH_PER_USD is used only for M-Pesa transactions and display for Kenyan users.
+KSH_PER_USD = Decimal("150.00")
+
+# Display currency for the platform
+DISPLAY_CURRENCY = "USD"
+DISPLAY_CURRENCY_SYMBOL = "$"
+
+# Platform fee percentage applied on top of a business's campaign budget.
+PLATFORM_FEE_PERCENTAGE = Decimal("25.00")
+
+# Withholding tax applied to reviewer withdrawals (in their local currency).
+WITHHOLDING_TAX_PERCENTAGE = Decimal("5.00")
+
+# Minimum withdrawal in USD
+MIN_WITHDRAWAL_USD = Decimal("100.00")
+
+# Phone verification deposit
 SUBMISSION_AUTO_VERIFY = env.bool("SUBMISSION_AUTO_VERIFY", default=True)
+
+# PayHero M-Pesa collection
+PAYHERO_BASE_URL = env("PAYHERO_BASE_URL", default="https://backend.payhero.co.ke")
+PAYHERO_AUTH_TOKEN = env("PAYHERO_AUTH_TOKEN", default="")
+PAYHERO_API_KEY = env("PAYHERO_API_KEY", default="")
+PAYHERO_API_SECRET = env("PAYHERO_API_SECRET", default="")
+PAYHERO_CHANNEL_ID = env.int("PAYHERO_CHANNEL_ID", default=0)
+PAYHERO_CALLBACK_BASE_URL = env("PAYHERO_CALLBACK_BASE_URL", default="")
+PAYHERO_TIMEOUT_SECONDS = env.int("PAYHERO_TIMEOUT_SECONDS", default=15)
 
 # Logging
 LOGGING = {

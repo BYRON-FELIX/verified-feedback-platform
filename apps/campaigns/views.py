@@ -2,8 +2,11 @@ from django.contrib import messages
 from django.db import transaction
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
+from django.views.decorators.http import require_POST
 
 from apps.common.decorators import business_required, reviewer_required
+from apps.common.services import surveys_are_locked
+from apps.wallets.services import get_or_create_wallet
 
 from .forms import CampaignForm, QuestionFormSet, RequirementFormSet
 from .models import (
@@ -11,6 +14,7 @@ from .models import (
     Campaign,
     CampaignApplication,
     CampaignStatus,
+    CampaignType,
     Category,
 )
 
@@ -36,7 +40,10 @@ def business_campaign_create(request):
     business = request.user.owned_businesses.first()
 
     if not business:
-        messages.warning(request, "You need a business profile before creating campaigns. Complete it first.")
+        messages.warning(
+            request,
+            "You need a business profile before creating campaigns. Complete it first.",
+        )
         return redirect("/business/profile/")
 
     if request.method == "POST":
@@ -49,8 +56,8 @@ def business_campaign_create(request):
                 campaign = form.save(commit=False)
                 campaign.business = business
                 campaign.status = CampaignStatus.DRAFT
-                campaign.budget_total_ksh = (
-                    campaign.reward_amount_ksh * campaign.target_participants
+                campaign.budget_total = (
+                    campaign.reward_amount * campaign.target_participants
                 )
                 campaign.save()
 
@@ -97,8 +104,8 @@ def business_campaign_detail(request, pk):
 
 
 @business_required
+@require_POST
 def business_application_reject(request, pk):
-    """Business rejects an accepted application. Releases the slot."""
     business = request.user.owned_businesses.first()
     if not business:
         messages.error(request, "No business profile.")
@@ -120,7 +127,6 @@ def business_application_reject(request, pk):
             messages.warning(request, "Only accepted applications can be rejected.")
             return redirect("campaigns:business_detail", pk=application.campaign.pk)
 
-        # Lock the campaign and decrement slots
         campaign = Campaign.objects.select_for_update().get(pk=application.campaign.pk)
         application.status = ApplicationStatus.REJECTED
         application.rejected_at = timezone.now()
@@ -135,7 +141,6 @@ def business_application_reject(request, pk):
 
 
 # ---------- Reviewer: browse & view ----------
-
 
 def reviewer_campaign_list(request):
     """
@@ -159,7 +164,12 @@ def reviewer_campaign_list(request):
     categories = Category.objects.filter(is_active=True)
 
     applied_ids = set()
+    surveys_locked = False
     if request.user.is_authenticated and request.user.role == "REVIEWER":
+        surveys_locked = surveys_are_locked(
+            request.user,
+            get_or_create_wallet(request.user),
+        )
         applied_ids = set(
             CampaignApplication.objects
             .filter(reviewer=request.user)
@@ -174,10 +184,9 @@ def reviewer_campaign_list(request):
         "selected_category": category_id,
         "search": search,
         "applied_ids": applied_ids,
-        # tells the template we're in "public browse" mode
         "is_public_browse": not request.user.is_authenticated,
+        "surveys_locked": surveys_locked,
     })
-
 
 
 def reviewer_campaign_detail(request, slug):
@@ -187,7 +196,12 @@ def reviewer_campaign_detail(request, slug):
     )
 
     existing = None
+    surveys_locked = False
     if request.user.is_authenticated and request.user.role == "REVIEWER":
+        surveys_locked = surveys_are_locked(
+            request.user,
+            get_or_create_wallet(request.user),
+        )
         existing = CampaignApplication.objects.filter(
             campaign=campaign, reviewer=request.user
         ).first()
@@ -197,17 +211,16 @@ def reviewer_campaign_detail(request, slug):
         "nav_active": "campaigns",
         "campaign": campaign,
         "existing_application": existing,
+        "surveys_locked": surveys_locked,
     })
 
 
 @reviewer_required
 def reviewer_campaign_apply(request, slug):
-    """Apply and atomically claim a slot."""
     if request.method != "POST":
         return redirect("campaigns:reviewer_detail", slug=slug)
 
     with transaction.atomic():
-        # Lock the campaign row
         campaign = (
             Campaign.objects
             .select_for_update()
@@ -218,23 +231,31 @@ def reviewer_campaign_apply(request, slug):
             messages.error(request, "Campaign not found.")
             return redirect("campaigns:reviewer_list")
 
-        # Basic eligibility
         if campaign.status != CampaignStatus.ACTIVE:
             messages.error(request, "This campaign is not currently accepting applications.")
+            return redirect("campaigns:reviewer_detail", slug=slug)
+
+        if (
+            campaign.campaign_type == CampaignType.SURVEY
+            and surveys_are_locked(request.user, get_or_create_wallet(request.user))
+        ):
+            messages.error(
+                request,
+                "Surveys are locked because you reached the earnings threshold. "
+                "Unlock survey access from your dashboard.",
+            )
             return redirect("campaigns:reviewer_detail", slug=slug)
 
         if campaign.filled_slots >= campaign.target_participants:
             messages.error(request, "This campaign is full.")
             return redirect("campaigns:reviewer_detail", slug=slug)
 
-        # Prevent double-apply (also enforced by DB unique constraint)
         if CampaignApplication.objects.filter(
             campaign=campaign, reviewer=request.user
         ).exists():
             messages.info(request, "You have already applied to this campaign.")
             return redirect("campaigns:reviewer_detail", slug=slug)
 
-        # Create and auto-accept
         application = CampaignApplication.objects.create(
             campaign=campaign,
             reviewer=request.user,
@@ -242,14 +263,13 @@ def reviewer_campaign_apply(request, slug):
             accepted_at=timezone.now(),
         )
 
-        # Increment slot
         campaign.filled_slots += 1
         campaign.save(update_fields=["filled_slots"])
 
     messages.success(
         request,
         "You've been accepted. You now have a slot in this campaign. "
-        "Complete the task and submit your evidence to get paid."
+        "Complete the task and submit your feedback to get paid."
     )
     return redirect("campaigns:reviewer_detail", slug=slug)
 

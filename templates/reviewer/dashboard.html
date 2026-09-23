@@ -1,61 +1,77 @@
 {% extends "layouts/dashboard.html" %}
 
 {% block title %}Reviewer Dashboard · VerifiedFeedback{% endblock %}
-{% block side_label %}Reviewer{% endblock %}
-
-{% block sidebar %}
-    <li><a class="nav-link active" href="/reviewer/"><i class="bi bi-speedometer2"></i> Dashboard</a></li>
-    <li><a class="nav-link" href="/campaigns/reviewer/"><i class="bi bi-search"></i> Find Tasks</a></li>
-    <li><a class="nav-link" href="{% url 'campaigns:reviewer_my_applications' %}"><i class="bi bi-inbox"></i> My Applications</a></li>
-    <li><a class="nav-link" href="{% url 'submissions:mine' %}"><i class="bi bi-file-earmark-text"></i> My Submissions</a></li>
-    <li><a class="nav-link" href="{% url 'withdrawals:wallet' %}"><i class="bi bi-wallet2"></i> Wallet</a></li>
-    <li><a class="nav-link" href="{% url 'reviewers:profile' %}"><i class="bi bi-person"></i> Profile</a></li>
-{% endblock %}
-
 {% block dashboard_content %}
-<div class="row g-3 mb-4">
-    <div class="col-md-3">
-        <div class="card border-0 shadow-sm">
-            <a href="{% url 'withdrawals:wallet' %}" class="text-decoration-none text-reset">
-                <div class="card-body">
-                    <div class="text-muted small">Available balance</div>
-                    <div class="fs-4 fw-bold">KSh {{ wallet.available_balance_ksh|default:0 }}</div>
-                </div>
+<div class="mx-auto w-full max-w-6xl">
+    <div class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+            <p class="mb-2 text-xs font-extrabold uppercase tracking-[0.18em] text-emerald-700">Your workspace</p>
+            <h1 class="mb-2 text-3xl font-extrabold tracking-tight text-slate-950 sm:text-4xl">Good to see you, {{ user.first_name|default:user.email }}.</h1>
+            <p class="max-w-xl text-base leading-7 text-slate-600">Keep your feedback moving and discover your next paid task.</p>
+        </div>
+        <div class="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
+            <a href="{% url 'withdrawals:request' %}" class="inline-flex min-h-12 items-center justify-center rounded-xl bg-emerald-700 px-5 py-3 font-extrabold text-white shadow-lg shadow-emerald-700/20 transition hover:bg-emerald-800 focus:outline-none focus:ring-4 focus:ring-emerald-200">
+                <i class="bi bi-cash-coin me-2"></i>Withdraw funds
+            </a>
+            <a href="{% url 'campaigns:reviewer_list' %}" class="inline-flex min-h-12 items-center justify-center rounded-xl border-2 border-slate-300 bg-white px-5 py-3 font-extrabold text-slate-800 transition hover:border-emerald-600 hover:bg-emerald-50 focus:outline-none focus:ring-4 focus:ring-emerald-100">
+                <i class="bi bi-search me-2"></i>Find a task
             </a>
         </div>
     </div>
-    <div class="col-md-3">
-        <div class="card border-0 shadow-sm">
-            <div class="card-body">
-                <div class="text-muted small">Pending earnings</div>
-                <div class="fs-4 fw-bold">KSh {{ wallet.pending_balance_ksh|default:0 }}</div>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card border-0 shadow-sm">
-            <div class="card-body">
-                <div class="text-muted small">Total earned</div>
-                <div class="fs-4 fw-bold">KSh {{ wallet.lifetime_earnings_ksh|default:0 }}</div>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card border-0 shadow-sm">
-            <div class="card-body">
-                <div class="text-muted small">Submissions</div>
-                <div class="fs-4 fw-bold">{{ submission_count|default:0 }}</div>
-            </div>
-        </div>
-    </div>
-</div>
 
-<div class="card border-0 shadow-sm">
-    <div class="card-body text-center py-5">
-        <i class="bi bi-search fs-1 text-muted"></i>
-        <h5 class="mt-3">Find your next task</h5>
-        <p class="text-muted">Browse campaigns from businesses near you.</p>
-        <a href="/campaigns/reviewer/" class="btn btn-primary">Browse campaigns</a>
+    <section class="mb-5 overflow-hidden rounded-2xl border-2 border-emerald-800 bg-emerald-900 text-white shadow-xl shadow-emerald-900/15">
+        <div class="flex flex-col gap-6 p-5 sm:p-7 lg:flex-row lg:items-end lg:justify-between">
+            <div>
+                <div class="mb-3 flex items-center gap-2 text-sm font-bold text-emerald-100"><span class="h-2 w-2 rounded-full bg-amber-300"></span>Available to withdraw</div>
+                <div class="text-4xl font-extrabold tracking-tight sm:text-5xl">${{ wallet.available_balance }}</div>
+                <p class="mt-2 mb-0 text-sm text-emerald-100">Move your available earnings whenever you are ready.</p>
+            </div>
+            <a href="{% url 'withdrawals:wallet' %}" class="inline-flex min-h-12 items-center justify-center rounded-xl border-2 border-emerald-300/70 bg-emerald-800 px-5 py-3 font-extrabold text-white transition hover:bg-emerald-700 focus:outline-none focus:ring-4 focus:ring-emerald-300/40">
+                View wallet <i class="bi bi-arrow-up-right ms-2"></i>
+            </a>
+        </div>
+    </section>
+
+    <div class="mb-5 grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <div class="metric-card rounded-2xl border-2 border-slate-200 bg-white p-4 shadow-sm sm:p-5">
+            <div class="mb-3 grid h-9 w-9 place-items-center rounded-xl bg-amber-100 text-amber-800"><i class="bi bi-hourglass-split"></i></div>
+            <div class="text-xs font-extrabold uppercase tracking-wide text-slate-500">Pending</div>
+            <div class="mt-1 break-words text-xl font-extrabold text-slate-950 sm:text-2xl">${{ wallet.pending_balance }}</div>
+        </div>
+        <div class="metric-card rounded-2xl border-2 border-slate-200 bg-white p-4 shadow-sm sm:p-5">
+            <div class="mb-3 grid h-9 w-9 place-items-center rounded-xl bg-emerald-100 text-emerald-800"><i class="bi bi-graph-up-arrow"></i></div>
+            <div class="text-xs font-extrabold uppercase tracking-wide text-slate-500">Total earned</div>
+            <div class="mt-1 break-words text-xl font-extrabold text-slate-950 sm:text-2xl">${{ wallet.lifetime_earnings }}</div>
+        </div>
+        <a href="{% url 'submissions:mine' %}" class="metric-card rounded-2xl border-2 border-slate-200 bg-white p-4 text-decoration-none shadow-sm transition hover:border-emerald-500 sm:p-5">
+            <div class="mb-3 grid h-9 w-9 place-items-center rounded-xl bg-sky-100 text-sky-800"><i class="bi bi-file-earmark-check"></i></div>
+            <div class="text-xs font-extrabold uppercase tracking-wide text-slate-500">Submissions</div>
+            <div class="mt-1 text-xl font-extrabold text-slate-950 sm:text-2xl">{{ submission_count }}</div>
+        </a>
+        <a href="{% url 'withdrawals:list' %}" class="metric-card rounded-2xl border-2 border-slate-200 bg-white p-4 text-decoration-none shadow-sm transition hover:border-emerald-500 sm:p-5">
+            <div class="mb-3 grid h-9 w-9 place-items-center rounded-xl bg-violet-100 text-violet-800"><i class="bi bi-clock-history"></i></div>
+            <div class="text-xs font-extrabold uppercase tracking-wide text-slate-500">Withdrawals</div>
+            <div class="mt-1 text-sm font-extrabold text-emerald-700">View history <i class="bi bi-arrow-right"></i></div>
+        </a>
     </div>
+
+{% if requires_account_verification %}
+<div class="mb-4 flex flex-col gap-4 rounded-2xl border-2 border-amber-200 bg-amber-50 p-4 text-amber-950 sm:flex-row sm:items-center sm:justify-between sm:p-5">
+    <div class="flex items-start gap-3">
+        <i class="bi bi-shield-exclamation mt-1 text-xl text-amber-700"></i>
+        <div><strong>Account verification required.</strong>
+        You reached ${{ platform_settings.verification_trigger_usd }} in earnings.
+        <span class="text-amber-900/80">Verify your phone number from your profile before continuing.</span></div>
+    </div>
+    <a href="{% url 'reviewers:profile' %}" class="inline-flex min-h-11 shrink-0 items-center justify-center rounded-xl bg-amber-500 px-4 py-2 font-extrabold text-amber-950 transition hover:bg-amber-400">Verify account</a>
+</div>
+{% endif %}
+
+    <section class="rounded-2xl border-2 border-slate-200 bg-white p-6 text-center shadow-sm sm:p-10">
+        <span class="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-emerald-100 text-emerald-800"><i class="bi bi-search text-2xl"></i></span>
+        <h2 class="mt-4 text-xl font-extrabold text-slate-950 sm:text-2xl">Find your next task</h2>
+        <p class="mx-auto mt-2 max-w-md text-slate-600">Browse active campaigns and turn your real-world experience into rewards.</p>
+        <a href="{% url 'campaigns:reviewer_list' %}" class="mt-5 inline-flex min-h-12 items-center justify-center rounded-xl bg-emerald-700 px-6 py-3 font-extrabold text-white shadow-lg shadow-emerald-700/20 transition hover:bg-emerald-800">Browse campaigns <i class="bi bi-arrow-right ms-2"></i></a>
+    </section>
 </div>
 {% endblock %}
