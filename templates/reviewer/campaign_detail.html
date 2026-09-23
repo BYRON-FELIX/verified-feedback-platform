@@ -2,146 +2,115 @@
 
 {% block title %}{{ campaign.title }} · VerifiedFeedback{% endblock %}
 {% block heading_actions %}
-    <a href="{% url 'campaigns:reviewer_list' %}" class="btn btn-outline-secondary btn-sm">← Back</a>
+    <a href="{% url 'campaigns:reviewer_list' %}" class="inline-flex min-h-11 items-center justify-center rounded-xl border-2 border-slate-300 bg-white px-4 py-2 text-sm font-extrabold text-slate-700 transition hover:border-emerald-600 hover:bg-emerald-50 focus:outline-none focus:ring-4 focus:ring-emerald-100">
+        <i class="bi bi-arrow-left me-2"></i>Back to tasks
+    </a>
 {% endblock %}
 
 {% block dashboard_content %}
-<div class="page-intro mb-4"><div><div class="page-kicker">Task details</div><h1 class="section-heading">{{ campaign.title }}</h1><p class="text-muted mb-0">{{ campaign.business.name }}{% if campaign.county %} · {{ campaign.county.name }}{% endif %}</p></div></div>
-<div class="card border-0 shadow-sm mb-4">
-    <div class="card-body">
-        <div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-3">
-            <div class="flex-grow-1 min-w-0">
-                <span class="badge bg-secondary-subtle text-secondary-emphasis">
-                    {{ campaign.get_campaign_type_display }}
-                </span>
-                {% if campaign.county %}
-                    <span class="badge bg-light text-dark border">
-                        <i class="bi bi-geo-alt"></i> {{ campaign.county.name }}
-                    </span>
-                {% endif %}
-            </div>
-            <span class="badge bg-success-subtle text-success-emphasis py-2 px-3 text-nowrap">
-                Reward: ${{ campaign.reward_amount }}
-            </span>
+<div class="mx-auto w-full max-w-6xl pb-24 lg:pb-8">
+    <div class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <div class="min-w-0">
+            <p class="mb-2 text-xs font-extrabold uppercase tracking-[0.18em] text-emerald-700">Task details</p>
+            <h1 class="break-words text-3xl font-extrabold tracking-tight text-slate-950 sm:text-4xl">{{ campaign.title }}</h1>
+            <p class="mt-2 text-base font-semibold text-slate-500">{{ campaign.business.name }}{% if campaign.county %} <span class="mx-1 text-slate-300">·</span> {{ campaign.county.name }}{% endif %}</p>
         </div>
-
-        <h3 class="mb-1 text-break">{{ campaign.title }}</h3>
-        <p class="text-muted mb-4">{{ campaign.business.name }}</p>
-
-        <p>{{ campaign.description }}</p>
-
-        <div class="row g-3 my-4">
-            <div class="col-6 col-md-3">
-                <div class="text-muted small">Estimated time</div>
-                <div class="fw-bold">~{{ campaign.estimated_minutes }} minutes</div>
-            </div>
-            <div class="col-6 col-md-3">
-                <div class="text-muted small">Slots remaining</div>
-                <div class="fw-bold">{{ campaign.slots_remaining }} of {{ campaign.target_participants }}</div>
-            </div>
-            <div class="col-6 col-md-3">
-                <div class="text-muted small">Deadline</div>
-                <div class="fw-bold">{{ campaign.end_date }}</div>
-            </div>
-        </div>
-
-        {% if campaign.instructions %}
-            <h6 class="mt-4">Instructions</h6>
-            <p class="mb-0">{{ campaign.instructions|linebreaks }}</p>
-        {% endif %}
+        <div class="inline-flex w-fit items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-sm font-extrabold text-emerald-800"><span class="h-2 w-2 rounded-full bg-emerald-600"></span>{{ campaign.get_campaign_type_display }}</div>
     </div>
-</div>
+
+    <div class="grid gap-5 lg:grid-cols-[minmax(0,1fr)_20rem] lg:items-start">
+        <div class="space-y-5">
+            <section class="overflow-hidden rounded-2xl border-2 border-emerald-800 bg-emerald-900 text-white shadow-xl shadow-emerald-900/15">
+                <div class="flex flex-col gap-6 p-5 sm:flex-row sm:items-end sm:justify-between sm:p-7">
+                    <div><p class="mb-2 text-xs font-extrabold uppercase tracking-[0.16em] text-emerald-200">What you can earn</p><div class="text-4xl font-extrabold tracking-tight sm:text-5xl">${{ campaign.reward_amount }}</div><p class="mt-2 mb-0 text-sm text-emerald-100">Reward for a complete, genuine submission.</p></div>
+                    <div class="rounded-xl border border-emerald-400/40 bg-emerald-800/70 px-4 py-3 sm:text-right"><span class="block text-xs font-bold uppercase tracking-wide text-emerald-200">Time needed</span><strong class="text-lg font-extrabold">~{{ campaign.estimated_minutes }} minutes</strong></div>
+                </div>
+                <div class="grid grid-cols-2 border-t border-emerald-700/70 bg-emerald-950/25"><div class="p-4 sm:px-7"><span class="block text-xs font-bold uppercase tracking-wide text-emerald-300">Slots left</span><strong class="mt-1 block text-lg font-extrabold">{{ campaign.slots_remaining }}</strong></div><div class="border-l border-emerald-700/70 p-4 sm:px-7"><span class="block text-xs font-bold uppercase tracking-wide text-emerald-300">Deadline</span><strong class="mt-1 block text-lg font-extrabold">{{ campaign.end_date|date:"M d, Y" }}</strong></div></div>
+            </section>
+
+            <section class="rounded-2xl border-2 border-slate-200 bg-white p-5 shadow-sm sm:p-7"><div class="mb-4 flex items-start gap-3"><span class="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-sky-100 text-sky-800"><i class="bi bi-file-text"></i></span><div><h2 class="text-xl font-extrabold text-slate-950">About this task</h2><p class="mt-1 text-sm text-slate-500">The context you need before deciding.</p></div></div><p class="mb-0 whitespace-pre-line text-base leading-8 text-slate-700">{{ campaign.description }}</p></section>
+
+            {% if campaign.instructions %}
+            <section class="rounded-2xl border-2 border-slate-200 bg-white p-5 shadow-sm sm:p-7"><div class="mb-4 flex items-start gap-3"><span class="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-violet-100 text-violet-800"><i class="bi bi-list-ol"></i></span><div><h2 class="text-xl font-extrabold text-slate-950">How it works</h2><p class="mt-1 text-sm text-slate-500">Follow these instructions to complete the task.</p></div></div><div class="whitespace-pre-line text-base leading-8 text-slate-700">{{ campaign.instructions }}</div></section>
+            {% endif %}
 
 {% if campaign.requirements.all %}
-<div class="card border-0 shadow-sm mb-4">
-    <div class="card-body">
-        <h6 class="mb-3">You must meet these requirements</h6>
-        <ul class="mb-0">
+<section class="rounded-2xl border-2 border-slate-200 bg-white p-5 shadow-sm sm:p-7">
+        <div class="mb-4 flex items-start gap-3"><span class="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-amber-100 text-amber-800"><i class="bi bi-person-check"></i></span><div><h2 class="text-xl font-extrabold text-slate-950">Who this is for</h2><p class="mt-1 text-sm text-slate-500">Make sure you meet these requirements before applying.</p></div></div>
+        <div class="m-0 space-y-3">
             {% for r in campaign.requirements.all %}
-                <li>
-                    {{ r.text }}
-                    {% if r.is_mandatory %}<span class="badge bg-light text-dark border">required</span>{% endif %}
-                </li>
+                <div class="flex items-start gap-3 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm leading-6 text-slate-700">
+                    <i class="bi bi-check2-circle mt-1 shrink-0 text-lg text-emerald-700"></i><span class="flex-1">{{ r.text }}</span>
+                    {% if r.is_mandatory %}<span class="shrink-0 rounded-full bg-amber-100 px-2 py-1 text-[10px] font-extrabold uppercase tracking-wide text-amber-800">Required</span>{% endif %}
+                </div>
             {% endfor %}
-        </ul>
-    </div>
-</div>
+        </div>
+</section>
 {% endif %}
 
-<div class="card border-0 shadow-sm mb-4">
-    <div class="card-body">
-        <h6 class="mb-3">What you'll be asked to provide</h6>
-        <ul class="mb-0 small text-muted">
-            <li>Answer {{ campaign.questions.count }} question{{ campaign.questions.count|pluralize }}</li>
-            <li>Provide written feedback based on your real experience</li>
-        </ul>
-    </div>
+<section class="rounded-2xl border-2 border-slate-200 bg-white p-5 shadow-sm sm:p-7"><div class="mb-4 flex items-start gap-3"><span class="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-emerald-100 text-emerald-800"><i class="bi bi-chat-square-text"></i></span><div><h2 class="text-xl font-extrabold text-slate-950">What you will submit</h2><p class="mt-1 text-sm text-slate-500">A clear response helps the business make better decisions.</p></div></div><div class="grid gap-3 sm:grid-cols-2"><div class="rounded-xl border border-slate-200 bg-slate-50 p-4"><i class="bi bi-star-fill text-amber-500"></i><strong class="mt-2 block text-sm text-slate-900">Overall rating</strong><span class="mt-1 block text-sm text-slate-600">Rate the experience honestly.</span></div><div class="rounded-xl border border-slate-200 bg-slate-50 p-4"><i class="bi bi-pencil-square text-emerald-700"></i><strong class="mt-2 block text-sm text-slate-900">Written feedback</strong><span class="mt-1 block text-sm text-slate-600">Answer {{ campaign.questions.count }} question{{ campaign.questions.count|pluralize }} in your own words.</span></div></div></section>
+
+<div class="rounded-xl border-2 border-slate-200 bg-slate-50 px-4 py-3 text-sm leading-6 text-slate-600">
+    <i class="bi bi-shield-check me-2 text-emerald-700"></i><strong class="text-slate-900">Fair feedback only.</strong> Your reward is the same whether your rating is positive or critical.
 </div>
 
-<div class="alert alert-light border small">
-    <strong>Reminder:</strong> Your reward is for providing genuine feedback, not for a positive rating.
-    You can rate however you feel.
 </div>
+
+<aside class="lg:sticky lg:top-24">
+<div class="rounded-2xl border-2 border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+    <p class="mb-2 text-xs font-extrabold uppercase tracking-[0.16em] text-emerald-700">Ready to participate?</p>
+    <h2 class="text-xl font-extrabold text-slate-950">Take the next step</h2>
+    <p class="mt-2 text-sm leading-6 text-slate-600">You will be accepted immediately if a slot is available.</p>
 
 {% if existing_application %}
     {% if existing_application.status == "ACCEPTED" %}
-        <div class="alert alert-success">
-            <strong>You're in.</strong> You have a slot in this campaign.
-            Complete the task and submit your feedback to get paid.
+        <div class="mt-5 rounded-xl border-2 border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-900"><strong class="block">You're in.</strong><span class="mt-1 block">Your slot is ready. Complete the task to get paid.</span>
             {% if not surveys_locked or campaign.campaign_type != "SURVEY" %}
-            <div class="mt-3">
-                <a href="{% url 'submissions:start' existing_application.id %}" class="btn btn-success btn-lg">
-                    Start submission →
+            <div class="mt-4">
+                <a href="{% url 'submissions:start' existing_application.id %}" class="inline-flex min-h-12 w-full items-center justify-center rounded-xl bg-emerald-700 px-5 py-3 font-extrabold text-white shadow-lg shadow-emerald-700/20 transition hover:bg-emerald-800">Start submission <i class="bi bi-arrow-right ms-2"></i>
                 </a>
             </div>
             {% else %}
-            <div class="mt-3">
-                <a href="{% url 'reviewers:dashboard' %}" class="btn btn-primary">Unlock surveys</a>
+            <div class="mt-4">
+                <a href="{% url 'reviewers:dashboard' %}" class="inline-flex min-h-12 w-full items-center justify-center rounded-xl border-2 border-emerald-600 bg-white px-5 py-3 font-extrabold text-emerald-800">Unlock surveys</a>
             </div>
             {% endif %}
         </div>
     {% elif existing_application.status == "COMPLETED" %}
-        <div class="alert alert-primary">
-            <strong>Task completed.</strong> Your submission has been received.
-            <div class="mt-3">
-                <a href="{% url 'submissions:mine' %}" class="btn btn-outline-primary btn-sm">
-                    View my submissions
+        <div class="mt-5 rounded-xl border-2 border-violet-200 bg-violet-50 p-4 text-sm text-violet-900"><strong class="block">Task completed.</strong><span class="mt-1 block">Your submission has been received.</span>
+            <div class="mt-4"><a href="{% url 'submissions:mine' %}" class="inline-flex min-h-11 w-full items-center justify-center rounded-xl border-2 border-violet-600 bg-white px-4 py-2 font-extrabold text-violet-800">View my submissions <i class="bi bi-arrow-up-right ms-2"></i>
                 </a>
             </div>
         </div>
     {% elif existing_application.status == "APPLIED" %}
-        <div class="alert alert-info">Your application is pending.</div>
+        <div class="mt-5 rounded-xl border-2 border-sky-200 bg-sky-50 p-4 text-sm text-sky-900"><strong class="block">Application pending.</strong><span class="mt-1 block">We will let you know when it is reviewed.</span></div>
     {% elif existing_application.status == "REJECTED" %}
-        <div class="alert alert-warning">Your application was rejected.</div>
+        <div class="mt-5 rounded-xl border-2 border-red-200 bg-red-50 p-4 text-sm text-red-900"><strong class="block">Application not accepted.</strong><span class="mt-1 block">This campaign is no longer available to you.</span></div>
     {% elif existing_application.status == "WITHDRAWN" %}
-        <div class="alert alert-secondary">You withdrew from this campaign.</div>
+        <div class="mt-5 rounded-xl border-2 border-slate-200 bg-slate-50 p-4 text-sm text-slate-700">You withdrew from this campaign.</div>
     {% endif %}
 {% elif not campaign.is_open %}
-    <div class="alert alert-warning">
-        This campaign is {{ campaign.get_status_display|lower }}{% if campaign.slots_remaining == 0 %} (all slots filled){% endif %}.
+    <div class="mt-5 rounded-xl border-2 border-amber-200 bg-amber-50 p-4 text-sm text-amber-900"><strong class="block">This task is {{ campaign.get_status_display|lower }}.</strong>{% if campaign.slots_remaining == 0 %}<span class="mt-1 block">All participant slots are filled.</span>{% endif %}
     </div>
 {% elif not user.is_authenticated %}
-    <div class="d-flex justify-content-end mb-5">
-        <a href="{% url 'accounts:login' %}?next={% url 'campaigns:reviewer_detail' campaign.slug %}"
-           class="btn btn-primary btn-lg px-4">
-            Log in to apply
+    <a href="{% url 'accounts:login' %}?next={% url 'campaigns:reviewer_detail' campaign.slug %}" class="mt-5 inline-flex min-h-12 w-full items-center justify-center rounded-xl bg-emerald-700 px-5 py-3 font-extrabold text-white shadow-lg shadow-emerald-700/20 transition hover:bg-emerald-800">Log in to apply <i class="bi bi-arrow-right ms-2"></i>
         </a>
     </div>
 {% else %}
     {% if surveys_locked and campaign.campaign_type == "SURVEY" %}
-    <div class="alert alert-info">
-        Surveys are locked after you reach the configured earnings threshold.
-        Unlock access from your dashboard to apply.
+    <div class="mt-5 rounded-xl border-2 border-sky-200 bg-sky-50 p-4 text-sm text-sky-900">Surveys are locked after you reach the configured earnings threshold. Unlock access from your dashboard to apply.
     </div>
+    <a href="{% url 'reviewers:dashboard' %}" class="mt-4 inline-flex min-h-12 w-full items-center justify-center rounded-xl border-2 border-sky-600 bg-white px-5 py-3 font-extrabold text-sky-800">Go to dashboard</a>
     {% else %}
-    <div class="d-flex justify-content-end mb-5">
-        <form method="post" action="{% url 'campaigns:reviewer_apply' campaign.slug %}">
+    <form method="post" action="{% url 'campaigns:reviewer_apply' campaign.slug %}" class="mt-5">
             {% csrf_token %}
-            <button type="submit" class="btn btn-primary btn-lg px-4">
-                Apply for this task
+            <button type="submit" class="inline-flex min-h-12 w-full items-center justify-center rounded-xl bg-emerald-700 px-5 py-3 font-extrabold text-white shadow-lg shadow-emerald-700/20 transition hover:bg-emerald-800 focus:outline-none focus:ring-4 focus:ring-emerald-200">Apply for this task <i class="bi bi-arrow-right ms-2"></i>
             </button>
-        </form>
-    </div>
+    </form>
     {% endif %}
 {% endif %}
+</div>
+</aside>
+</div>
+</div>
 {% endblock %}

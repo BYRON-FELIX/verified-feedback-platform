@@ -2,101 +2,70 @@
 
 {% block title %}My Applications · VerifiedFeedback{% endblock %}
 {% block dashboard_content %}
-{% if applications %}
-    <div class="card border-0 shadow-sm d-none d-md-block">
-        <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0">
-                <thead class="table-light">
-                    <tr>
-                        <th>Campaign</th>
-                        <th>Business</th>
-                        <th>Reward</th>
-                        <th>Status</th>
-                        <th>Applied</th>
-                        <th></th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for a in applications %}
-                    <tr>
-                        <td><strong>{{ a.campaign.title }}</strong></td>
-                        <td>{{ a.campaign.business.name }}</td>
-                        <td>${{ a.campaign.reward_amount }}</td>
-                        <td>
-                            {% if a.status == "ACCEPTED" %}<span class="badge bg-success">Accepted</span>
-                            {% elif a.status == "APPLIED" %}<span class="badge bg-info text-dark">Applied</span>
-                            {% elif a.status == "REJECTED" %}<span class="badge bg-danger">Rejected</span>
-                            {% elif a.status == "WITHDRAWN" %}<span class="badge bg-secondary">Withdrawn</span>
-                            {% elif a.status == "COMPLETED" %}<span class="badge bg-primary">Completed</span>
-                            {% endif %}
-                        </td>
-                        <td><small class="text-muted">{{ a.applied_at|date:"M d, Y" }}</small></td>
-                        <td>
-                            {% if a.status == "ACCEPTED" %}
-                                <a href="{% url 'submissions:start' a.id %}" class="btn btn-sm btn-success">
-                                    Start submission
-                                </a>
-                            {% elif a.status == "COMPLETED" %}
-                                <a href="{% url 'submissions:mine' %}" class="btn btn-sm btn-outline-primary">
-                                    View submission
-                                </a>
-                            {% else %}
-                                <a href="{% url 'campaigns:reviewer_detail' a.campaign.slug %}" class="btn btn-sm btn-outline-dark">
-                                    View
-                                </a>
-                            {% endif %}
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+<div class="mx-auto w-full max-w-6xl">
+    <div class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+            <p class="mb-2 text-xs font-extrabold uppercase tracking-[0.18em] text-emerald-700">Your task pipeline</p>
+            <h1 class="mb-2 text-3xl font-extrabold tracking-tight text-slate-950 sm:text-4xl">My applications</h1>
+            <p class="max-w-xl text-base leading-7 text-slate-600">Keep track of the tasks you have applied for and what needs your attention next.</p>
         </div>
+        <a href="{% url 'campaigns:reviewer_list' %}" class="inline-flex min-h-12 items-center justify-center rounded-xl bg-emerald-700 px-5 py-3 font-extrabold text-white shadow-lg shadow-emerald-700/20 transition hover:bg-emerald-800 focus:outline-none focus:ring-4 focus:ring-emerald-200">
+            <i class="bi bi-search me-2"></i>Find more tasks
+        </a>
     </div>
 
-    <div class="d-md-none">
-        {% for a in applications %}
-            <div class="list-card">
-                <div class="list-card-title">{{ a.campaign.title }}</div>
-                <div class="list-card-sub">{{ a.campaign.business.name }}</div>
-                <div class="list-card-row">
-                    <span class="label">Status</span>
-                    <span class="value">
-                        {% if a.status == "ACCEPTED" %}<span class="badge bg-success">Accepted</span>
-                        {% elif a.status == "APPLIED" %}<span class="badge bg-info text-dark">Applied</span>
-                        {% elif a.status == "REJECTED" %}<span class="badge bg-danger">Rejected</span>
-                        {% elif a.status == "WITHDRAWN" %}<span class="badge bg-secondary">Withdrawn</span>
-                        {% elif a.status == "COMPLETED" %}<span class="badge bg-primary">Completed</span>
-                        {% endif %}
-                    </span>
-                </div>
-                <div class="list-card-row">
-                    <span class="label">Reward</span>
-                    <span class="value">${{ a.campaign.reward_amount }}</span>
-                </div>
-                <div class="list-card-row">
-                    <span class="label">Applied</span>
-                    <span class="value">{{ a.applied_at|date:"M d, Y" }}</span>
-                </div>
-                <div class="list-card-actions">
-                    {% if a.status == "ACCEPTED" %}
-                        <a href="{% url 'submissions:start' a.id %}" class="btn btn-success btn-sm">Start submission</a>
-                    {% elif a.status == "COMPLETED" %}
-                        <a href="{% url 'submissions:mine' %}" class="btn btn-outline-primary btn-sm">View submission</a>
-                    {% else %}
-                        <a href="{% url 'campaigns:reviewer_detail' a.campaign.slug %}" class="btn btn-outline-dark btn-sm">View campaign</a>
-                    {% endif %}
-                </div>
-            </div>
-        {% endfor %}
-    </div>
-{% else %}
-    <div class="card border-0 shadow-sm">
-        <div class="card-body empty-state">
-            <i class="bi bi-inbox"></i>
-            <h5>No applications yet</h5>
-            <p class="text-muted">Browse available tasks and apply to get started.</p>
-            <a href="{% url 'campaigns:reviewer_list' %}" class="btn btn-primary">Find tasks</a>
+    {% if applications %}
+        <div class="mb-4 flex items-center justify-between rounded-2xl border-2 border-slate-200 bg-white px-4 py-3 shadow-sm sm:px-5">
+            <span class="text-sm font-bold text-slate-600"><i class="bi bi-stack me-2 text-emerald-700"></i>{{ applications|length }} application{{ applications|length|pluralize }}</span>
+            <span class="text-xs font-bold uppercase tracking-wide text-slate-400">Most recent first</span>
         </div>
-    </div>
-{% endif %}
+
+        <div class="grid gap-4 lg:grid-cols-2">
+            {% for a in applications %}
+                <article class="group flex h-full flex-col overflow-hidden rounded-2xl border-2 border-slate-200 bg-white shadow-sm transition duration-200 hover:-translate-y-1 hover:border-emerald-400 hover:shadow-xl hover:shadow-emerald-900/10">
+                    <div class="flex items-start justify-between gap-4 border-b border-slate-100 p-5 sm:p-6">
+                        <div class="min-w-0">
+                            <div class="mb-3 flex flex-wrap items-center gap-2">
+                                {% if a.status == "ACCEPTED" %}<span class="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-extrabold text-emerald-800"><i class="bi bi-check-circle-fill"></i>Accepted</span>
+                                {% elif a.status == "APPLIED" %}<span class="inline-flex items-center gap-1.5 rounded-full border border-sky-200 bg-sky-50 px-3 py-1 text-xs font-extrabold text-sky-800"><i class="bi bi-hourglass-split"></i>Applied</span>
+                                {% elif a.status == "REJECTED" %}<span class="inline-flex items-center gap-1.5 rounded-full border border-red-200 bg-red-50 px-3 py-1 text-xs font-extrabold text-red-800"><i class="bi bi-x-circle-fill"></i>Rejected</span>
+                                {% elif a.status == "WITHDRAWN" %}<span class="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-slate-100 px-3 py-1 text-xs font-extrabold text-slate-700"><i class="bi bi-arrow-counterclockwise"></i>Withdrawn</span>
+                                {% elif a.status == "COMPLETED" %}<span class="inline-flex items-center gap-1.5 rounded-full border border-violet-200 bg-violet-50 px-3 py-1 text-xs font-extrabold text-violet-800"><i class="bi bi-check2-all"></i>Completed</span>
+                                {% endif %}
+                            </div>
+                            <h2 class="break-words text-lg font-extrabold leading-7 text-slate-950 sm:text-xl">{{ a.campaign.title }}</h2>
+                            <p class="mt-1 break-words text-sm font-semibold text-slate-500">{{ a.campaign.business.name }}</p>
+                        </div>
+                        <div class="shrink-0 rounded-xl border-2 border-amber-200 bg-amber-50 px-3 py-2 text-right">
+                            <span class="block text-[10px] font-extrabold uppercase tracking-wide text-amber-700">Reward</span>
+                            <strong class="text-lg font-extrabold text-amber-950">${{ a.campaign.reward_amount }}</strong>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3 px-5 py-4 sm:px-6">
+                        <div class="rounded-xl bg-slate-50 px-3 py-2.5"><span class="block text-[10px] font-extrabold uppercase tracking-wide text-slate-400">Applied</span><span class="mt-1 block text-sm font-bold text-slate-700">{{ a.applied_at|date:"M d, Y" }}</span></div>
+                        <div class="rounded-xl bg-slate-50 px-3 py-2.5"><span class="block text-[10px] font-extrabold uppercase tracking-wide text-slate-400">Next step</span><span class="mt-1 block text-sm font-bold text-slate-700">{% if a.status == "ACCEPTED" %}Submit feedback{% elif a.status == "COMPLETED" %}Review submitted{% elif a.status == "APPLIED" %}Await approval{% else %}View details{% endif %}</span></div>
+                    </div>
+
+                    <div class="mt-auto border-t border-slate-100 p-5 sm:p-6">
+                        {% if a.status == "ACCEPTED" %}
+                            <a href="{% url 'submissions:start' a.id %}" class="inline-flex min-h-12 w-full items-center justify-center rounded-xl bg-emerald-700 px-5 py-3 font-extrabold text-white shadow-md shadow-emerald-700/15 transition hover:bg-emerald-800 focus:outline-none focus:ring-4 focus:ring-emerald-200">Start submission <i class="bi bi-arrow-right ms-2"></i></a>
+                        {% elif a.status == "COMPLETED" %}
+                            <a href="{% url 'submissions:mine' %}" class="inline-flex min-h-12 w-full items-center justify-center rounded-xl border-2 border-emerald-600 bg-white px-5 py-3 font-extrabold text-emerald-800 transition hover:bg-emerald-50 focus:outline-none focus:ring-4 focus:ring-emerald-100">View submission <i class="bi bi-arrow-up-right ms-2"></i></a>
+                        {% else %}
+                            <a href="{% url 'campaigns:reviewer_detail' a.campaign.slug %}" class="inline-flex min-h-12 w-full items-center justify-center rounded-xl border-2 border-slate-300 bg-white px-5 py-3 font-extrabold text-slate-800 transition hover:border-emerald-600 hover:bg-emerald-50 focus:outline-none focus:ring-4 focus:ring-emerald-100">View campaign <i class="bi bi-arrow-right ms-2"></i></a>
+                        {% endif %}
+                    </div>
+                </article>
+            {% endfor %}
+        </div>
+    {% else %}
+        <section class="rounded-2xl border-2 border-dashed border-slate-300 bg-white px-5 py-12 text-center shadow-sm sm:px-10">
+            <span class="mx-auto grid h-16 w-16 place-items-center rounded-2xl bg-emerald-100 text-emerald-800"><i class="bi bi-inbox text-2xl"></i></span>
+            <h2 class="mt-5 text-xl font-extrabold text-slate-950 sm:text-2xl">Your applications will appear here</h2>
+            <p class="mx-auto mt-2 max-w-md text-slate-600">Browse available tasks, apply to the ones that fit, and manage every next step from one place.</p>
+            <a href="{% url 'campaigns:reviewer_list' %}" class="mt-6 inline-flex min-h-12 items-center justify-center rounded-xl bg-emerald-700 px-6 py-3 font-extrabold text-white shadow-lg shadow-emerald-700/20 transition hover:bg-emerald-800">Find your first task <i class="bi bi-arrow-right ms-2"></i></a>
+        </section>
+    {% endif %}
+</div>
 {% endblock %}

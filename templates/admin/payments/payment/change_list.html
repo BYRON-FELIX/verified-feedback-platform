@@ -1,0 +1,161 @@
+{% extends "admin/change_list.html" %}
+
+{% block content %}
+<section class="finance-analytics" aria-labelledby="finance-analytics-title">
+    <div class="finance-analytics-header">
+        <div>
+            <h2 id="finance-analytics-title">Finance analytics</h2>
+            <p>Successful PayHero collections · {{ finance_timezone }}</p>
+        </div>
+        <span class="finance-analytics-note">Based on payment completion time</span>
+    </div>
+
+    <div class="finance-analytics-grid">
+        <article class="finance-card finance-card-primary">
+            <span class="finance-card-label">Income today</span>
+            <strong>${{ finance_analytics.today.income_usd|floatformat:2 }}</strong>
+            <small>{{ finance_analytics.today.transactions }} payment{{ finance_analytics.today.transactions|pluralize }}</small>
+        </article>
+        <article class="finance-card">
+            <span class="finance-card-label">Yesterday</span>
+            <strong>${{ finance_analytics.yesterday.income_usd|floatformat:2 }}</strong>
+            <small>{{ finance_analytics.yesterday.transactions }} payment{{ finance_analytics.yesterday.transactions|pluralize }}</small>
+        </article>
+        <article class="finance-card">
+            <span class="finance-card-label">This week</span>
+            <strong>${{ finance_analytics.this_week.income_usd|floatformat:2 }}</strong>
+            <small>{{ finance_analytics.this_week.transactions }} payment{{ finance_analytics.this_week.transactions|pluralize }}</small>
+        </article>
+        <article class="finance-card">
+            <span class="finance-card-label">Last week</span>
+            <strong>${{ finance_analytics.last_week.income_usd|floatformat:2 }}</strong>
+            <small>{{ finance_analytics.last_week.transactions }} payment{{ finance_analytics.last_week.transactions|pluralize }}</small>
+        </article>
+        <article class="finance-card">
+            <span class="finance-card-label">This month</span>
+            <strong>${{ finance_analytics.this_month.income_usd|floatformat:2 }}</strong>
+            <small>{{ finance_analytics.this_month.transactions }} payment{{ finance_analytics.this_month.transactions|pluralize }}</small>
+        </article>
+        <article class="finance-card">
+            <span class="finance-card-label">Last month</span>
+            <strong>${{ finance_analytics.last_month.income_usd|floatformat:2 }}</strong>
+            <small>{{ finance_analytics.last_month.transactions }} payment{{ finance_analytics.last_month.transactions|pluralize }}</small>
+        </article>
+        <article class="finance-card finance-card-wide">
+            <span class="finance-card-label">This year</span>
+            <strong>${{ finance_analytics.this_year.income_usd|floatformat:2 }}</strong>
+            <small>{{ finance_analytics.this_year.transactions }} payment{{ finance_analytics.this_year.transactions|pluralize }}</small>
+        </article>
+    </div>
+</section>
+
+<style>
+    .finance-analytics {
+        margin: 0 0 24px;
+        padding: 22px;
+        border: 1px solid #d8e5dd;
+        border-radius: 14px;
+        background: linear-gradient(135deg, #f3faf5, #ffffff);
+    }
+
+    .finance-analytics-header {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 16px;
+        margin-bottom: 18px;
+    }
+
+    .finance-analytics h2 {
+        margin: 0 0 4px;
+        color: #17342d;
+        font-size: 20px;
+    }
+
+    .finance-analytics p,
+    .finance-analytics-note {
+        margin: 0;
+        color: #6b7d77;
+        font-size: 12px;
+    }
+
+    .finance-analytics-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 12px;
+    }
+
+    .finance-card {
+        display: flex;
+        min-height: 112px;
+        flex-direction: column;
+        justify-content: space-between;
+        padding: 16px;
+        border: 1px solid #d8e5dd;
+        border-radius: 12px;
+        background: #ffffff;
+    }
+
+    .finance-card-primary {
+        color: #ffffff;
+        border-color: #13795b;
+        background: #13795b;
+    }
+
+    .finance-card-wide {
+        grid-column: span 2;
+    }
+
+    .finance-card-label {
+        color: #6b7d77;
+        font-size: 12px;
+        font-weight: 700;
+    }
+
+    .finance-card-primary .finance-card-label,
+    .finance-card-primary small {
+        color: rgba(255, 255, 255, .78);
+    }
+
+    .finance-card strong {
+        color: #17342d;
+        font-size: 25px;
+        line-height: 1.1;
+    }
+
+    .finance-card-primary strong {
+        color: #ffffff;
+    }
+
+    .finance-card small {
+        color: #6b7d77;
+        font-size: 11px;
+    }
+
+    @media (max-width: 900px) {
+        .finance-analytics-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+    }
+
+    @media (max-width: 600px) {
+        .finance-analytics {
+            padding: 16px;
+        }
+
+        .finance-analytics-header {
+            flex-direction: column;
+        }
+
+        .finance-analytics-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .finance-card-wide {
+            grid-column: auto;
+        }
+    }
+</style>
+
+{{ block.super }}
+{% endblock %}

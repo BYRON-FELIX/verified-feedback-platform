@@ -56,26 +56,6 @@
     }
   },
   {
-    "model": "geo.country",
-    "pk": "33333333-3333-4333-8333-333333333333",
-    "fields": {
-      "code": "KE",
-      "name": "Kenya",
-      "currency_code": "KES",
-      "phone_prefix": "+254",
-      "is_active": true
-    }
-  },
-  {
-    "model": "geo.county",
-    "pk": "44444444-4444-4444-8444-444444444444",
-    "fields": {
-      "country": "33333333-3333-4333-8333-333333333333",
-      "name": "Nairobi",
-      "is_active": true
-    }
-  },
-  {
     "model": "businesses.business",
     "pk": "55555555-5555-4555-8555-555555555555",
     "fields": {
@@ -128,7 +108,7 @@
       "platform_fee": "62.50",
       "start_date": "2026-09-23",
       "end_date": "2026-10-31",
-      "county": "44444444-4444-4444-8444-444444444444",
+      "county": null,
       "location_description": "Nairobi Coffee Collective locations in Westlands and Nairobi CBD",
       "estimated_minutes": 15,
       "approved_at": "2026-09-23T08:00:00Z",
@@ -213,7 +193,7 @@
       "platform_fee": "46.88",
       "start_date": "2026-09-23",
       "end_date": "2026-10-15",
-      "county": "44444444-4444-4444-8444-444444444444",
+      "county": null,
       "location_description": "Nairobi Coffee Collective locations in Westlands",
       "estimated_minutes": 20,
       "approved_at": "2026-09-23T08:00:00Z",

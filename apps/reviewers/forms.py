@@ -3,7 +3,7 @@ from django.contrib.auth.forms import PasswordChangeForm
 
 from apps.accounts.models import User
 from apps.campaigns.models import Category
-from apps.geo.models import Country, County
+from apps.geo.models import Country
 
 from .models import ReviewerProfile
 
@@ -24,12 +24,10 @@ class ReviewerProfileForm(forms.ModelForm):
 
     class Meta:
         model = ReviewerProfile
-        fields = ["country", "date_of_birth", "county", "city", "bio", "preferred_categories"]
+        fields = ["country", "date_of_birth", "bio", "preferred_categories"]
         widgets = {
             "country": forms.Select(attrs={"class": "form-select"}),
             "date_of_birth": forms.DateInput(attrs={"class": "form-control", "type": "date"}),
-            "county": forms.Select(attrs={"class": "form-select"}),
-            "city": forms.TextInput(attrs={"class": "form-control"}),
             "bio": forms.Textarea(attrs={"class": "form-control", "rows": 3, "maxlength": 500}),
             "preferred_categories": forms.CheckboxSelectMultiple(
                 attrs={"class": "form-check-input"},
@@ -44,7 +42,6 @@ class ReviewerProfileForm(forms.ModelForm):
         self.fields["phone_number"].initial = user.phone_number
         self.fields["country"].queryset = Country.objects.filter(is_active=True)
         self.fields["preferred_categories"].queryset = Category.objects.filter(is_active=True)
-        self.fields["county"].queryset = County.objects.filter(is_active=True)
 
     def clean_phone_number(self):
         phone = (self.cleaned_data.get("phone_number") or "").strip()

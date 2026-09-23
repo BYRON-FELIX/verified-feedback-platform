@@ -1,0 +1,25 @@
+{% if status == "VERIFIED" %}
+    <span class="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-100 px-2.5 py-1 text-xs font-extrabold text-emerald-800">
+        <i class="bi bi-check-circle-fill"></i> Verified
+    </span>
+{% elif status == "SUBMITTED" %}
+    <span class="inline-flex items-center gap-1.5 rounded-full border border-sky-200 bg-sky-100 px-2.5 py-1 text-xs font-extrabold text-sky-800">
+        <i class="bi bi-send-check-fill"></i> Submitted
+    </span>
+{% elif status == "DRAFT" %}
+    <span class="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-slate-100 px-2.5 py-1 text-xs font-extrabold text-slate-700">
+        <i class="bi bi-pencil-fill"></i> Draft
+    </span>
+{% elif status == "REJECTED" %}
+    <span class="inline-flex items-center gap-1.5 rounded-full border border-red-200 bg-red-100 px-2.5 py-1 text-xs font-extrabold text-red-800">
+        <i class="bi bi-x-circle-fill"></i> Rejected
+    </span>
+{% elif status == "FLAGGED" %}
+    <span class="inline-flex items-center gap-1.5 rounded-full border border-amber-200 bg-amber-100 px-2.5 py-1 text-xs font-extrabold text-amber-800">
+        <i class="bi bi-flag-fill"></i> Flagged
+    </span>
+{% else %}
+    <span class="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-slate-100 px-2.5 py-1 text-xs font-extrabold text-slate-700">
+        {{ status|default:"Unknown"|title }}
+    </span>
+{% endif %}

@@ -32,6 +32,11 @@ class Payment(models.Model):
     )
     external_reference = models.CharField(max_length=80, unique=True)
     provider_reference = models.CharField(max_length=100, blank=True)
+    mpesa_transaction_code = models.CharField(
+        max_length=40,
+        blank=True,
+        help_text="M-Pesa receipt/transaction code returned by PayHero.",
+    )
     checkout_request_id = models.CharField(max_length=100, blank=True)
     provider_response = models.JSONField(default=dict, blank=True)
     failure_reason = models.TextField(blank=True)

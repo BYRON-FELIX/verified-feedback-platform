@@ -34,6 +34,12 @@ textarea { min-height: 6rem; resize: vertical; }
 select { appearance: auto; }
 input[type=checkbox], input[type=radio] { accent-color: #13795b; width: 1.1rem; height: 1.1rem; }
 
+/* Cumulative star ratings */
+.rating-option input { position: absolute; opacity: 0; pointer-events: none; }
+.rating-option-selected { border-color: #f0b84f !important; background: #fff7df !important; color: #d08a16 !important; }
+.rating-option-selected .rating-star { color: #e3a52f; text-shadow: 0 1px 0 rgba(144, 89, 0, .15); }
+.rating-option:focus-within { outline: 3px solid rgba(19, 121, 91, .22); outline-offset: 2px; }
+
 /* Bottom safe area for iOS */
 .pb-safe { padding-bottom: env(safe-area-inset-bottom, 0); }
 

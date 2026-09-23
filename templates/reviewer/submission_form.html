@@ -30,7 +30,6 @@
         </div>
     </div>
 </div>
-<form method="post" novalidate class="space-y-5">
 <form method="post" novalidate>
     {% csrf_token %}
 
@@ -99,13 +98,23 @@
                             {% endfor %}
                         </div>
 
-                    {% elif q.question_type == "YES_NO" or q.question_type == "RATING" %}
+                    {% elif q.question_type == "RATING" %}
                         <div class="rating-group flex flex-wrap gap-1" data-rating-group>
                             {% for radio in field %}
                                 <label class="rating-option inline-flex min-h-11 cursor-pointer items-center rounded-xl border-2 border-slate-200 bg-slate-50 px-3 py-2 text-2xl font-bold text-slate-300 transition hover:border-emerald-400 hover:bg-emerald-50" data-rating-value="{{ forloop.counter }}" title="{{ radio.choice_label }}">
                                     {{ radio.tag }}
                                     <span class="rating-star" aria-hidden="true">★</span>
                                     <span class="sr-only">{{ radio.choice_label }}</span>
+                                </label>
+                            {% endfor %}
+                        </div>
+
+                    {% elif q.question_type == "YES_NO" %}
+                        <div class="flex flex-wrap gap-2">
+                            {% for radio in field %}
+                                <label class="inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-xl border-2 border-slate-200 bg-slate-50 px-4 py-2 text-sm font-bold text-slate-700 transition hover:border-emerald-400 hover:bg-emerald-50">
+                                    {{ radio.tag }}
+                                    <span>{{ radio.choice_label }}</span>
                                 </label>
                             {% endfor %}
                         </div>

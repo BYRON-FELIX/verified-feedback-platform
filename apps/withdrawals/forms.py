@@ -7,7 +7,8 @@ class WithdrawalRequestForm(forms.Form):
     amount = forms.DecimalField(
         max_digits=12, decimal_places=2, min_value=1,
         widget=forms.NumberInput(attrs={
-            "class": "form-control", "step": "0.01", "placeholder": "100.00",
+            "class": "form-control pl-8", "step": "0.01", "min": "1",
+            "placeholder": "100.00", "inputmode": "decimal",
         }),
         label="Amount (USD)",
     )
@@ -20,6 +21,7 @@ class WithdrawalRequestForm(forms.Form):
         max_length=20, required=False,
         widget=forms.TextInput(attrs={
             "class": "form-control", "placeholder": "+254712345678",
+            "autocomplete": "tel", "inputmode": "tel",
         }),
         label="M-Pesa phone number (Kenya only)",
     )
@@ -27,6 +29,7 @@ class WithdrawalRequestForm(forms.Form):
         required=False,
         widget=forms.EmailInput(attrs={
             "class": "form-control", "placeholder": "you@example.com",
+            "autocomplete": "email", "inputmode": "email",
         }),
         label="PayPal / card email (non-Kenya)",
     )

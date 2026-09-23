@@ -4,7 +4,7 @@ from django.conf import settings
 from django.db import models
 
 from apps.campaigns.models import Category
-from apps.geo.models import Country, County
+from apps.geo.models import Country
 
 
 class ReviewerProfile(models.Model):
@@ -22,11 +22,6 @@ class ReviewerProfile(models.Model):
         related_name="reviewer_profiles",
         help_text="Country where the reviewer is based.",
     )
-    county = models.ForeignKey(
-        County, on_delete=models.SET_NULL, null=True, blank=True,
-        related_name="reviewer_profiles",
-    )
-    city = models.CharField(max_length=80, blank=True)
     bio = models.TextField(blank=True, max_length=500)
 
     preferred_categories = models.ManyToManyField(

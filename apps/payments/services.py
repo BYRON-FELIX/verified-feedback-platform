@@ -73,6 +73,22 @@ def _callback_url():
     return f"{settings.PAYHERO_CALLBACK_BASE_URL.rstrip('/')}/payments/payhero/callback/"
 
 
+def _mpesa_transaction_code(response):
+    """Extract the customer-facing M-Pesa receipt from PayHero's response."""
+    for key in (
+        "provider_reference",
+        "third_party_reference",
+        "payment_reference",
+        "transaction_reference",
+        "mpesa_receipt_number",
+        "MpesaReceiptNumber",
+    ):
+        value = response.get(key)
+        if value:
+            return str(value)
+    return ""
+
+
 def has_successful_mpesa_verification(user):
     return Payment.objects.filter(
         user=user,
@@ -227,6 +243,7 @@ def process_callback(payload):
         or status_response.get("third_party_reference")
         or payment.provider_reference
     )
+    mpesa_transaction_code = _mpesa_transaction_code(status_response)
 
     with transaction.atomic():
         payment = Payment.objects.select_for_update().get(pk=payment.pk)
@@ -235,6 +252,8 @@ def process_callback(payload):
         payment.provider_response = status_response
         payment.provider_reference = provider_reference
         if status == "SUCCESS":
+            if payment.purpose == PaymentPurpose.MPESA_ACCOUNT_VERIFICATION:
+                payment.mpesa_transaction_code = mpesa_transaction_code
             if payment.purpose == PaymentPurpose.MPESA_ACCOUNT_VERIFICATION:
                 payment.user.is_phone_verified = True
                 payment.user.save(update_fields=["is_phone_verified", "updated_at"])
@@ -252,6 +271,7 @@ def process_callback(payload):
                 "status",
                 "completed_at",
                 "provider_reference",
+                "mpesa_transaction_code",
                 "provider_response",
             ])
             notify(
@@ -269,7 +289,15 @@ def process_callback(payload):
                 body=(
                     "Your survey access is now unlocked."
                     if payment.purpose == PaymentPurpose.SURVEY_UNLOCK
-                    else "Your M-Pesa account is verified. You can now request M-Pesa withdrawals."
+                    else (
+                        "Your M-Pesa account is verified. "
+                        "You can now request M-Pesa withdrawals."
+                        + (
+                            f" Transaction code: {payment.mpesa_transaction_code}."
+                            if payment.mpesa_transaction_code
+                            else ""
+                        )
+                    )
                 ),
             )
         elif status == "FAILED":
