@@ -9,8 +9,15 @@ CSRF_TRUSTED_ORIGINS = env.list("CSRF_TRUSTED_ORIGINS", default=[])
 CORS_ALLOWED_ORIGINS = env.list("CORS_ALLOWED_ORIGINS", default=[])
 CORS_ALLOW_ALL_ORIGINS = False
 
+import dj_database_url
+
 # Database
-DATABASES = "postgresql://verified_feedback_db_user:KBryKfJcSG5mp7gQLFMEvjPwbSLzyqnc@dpg-dap8sjvf3r2c73eearhg-a.oregon-postgres.render.com/verified_feedback_db"
+DATABASES = {
+    "default": dj_database_url.config(
+        default=env("DATABASE_URL", default="postgresql://verified_feedback_db_user:KBryKfJcSG5mp7gQLFMEvjPwbSLzyqnc@dpg-dap8sjvf3r2c73eearhg-a.oregon-postgres.render.com/verified_feedback_db"),
+        conn_max_age=600
+    )
+}
 
 # Static files
 STATIC_ROOT = BASE_DIR / "staticfiles"
