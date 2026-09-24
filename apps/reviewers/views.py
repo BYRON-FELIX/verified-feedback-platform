@@ -60,6 +60,8 @@ def profile(request):
         "profile": profile,
         "wallet": wallet,
         "submission_count": submission_count,
+        "referred_count": request.user.referred_users.count(),
+        "referral_verified_count": request.user.referred_users.filter(is_phone_verified=True).count(),
     })
 
 

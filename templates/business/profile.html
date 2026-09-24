@@ -30,6 +30,20 @@
                         <span class="badge bg-danger-subtle text-danger-emphasis">Suspended</span>
                     {% endif %}
                 </div>
+
+                <div class="mt-4 rounded-3 border border-success-subtle bg-success-subtle p-3 text-start">
+                    <div class="d-flex align-items-start gap-2">
+                        <i class="bi bi-gift text-success fs-5"></i>
+                        <div class="flex-grow-1">
+                            <h6 class="mb-1 fw-bold text-success-emphasis">Invite friends, earn $5</h6>
+                            <p class="small text-success-emphasis mb-2">Earn a bonus when someone joins with your code and verifies their phone.</p>
+                            <div class="input-group input-group-sm">
+                                <input value="{{ request.user.referral_code }}" class="form-control fw-bold" readonly aria-label="Referral code">
+                                <button type="button" data-copy-referral="{{ request.user.referral_code }}" class="btn btn-success" aria-label="Copy referral code" title="Copy referral code"><i class="bi bi-copy"></i></button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -103,4 +117,18 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+{{ block.super }}
+<script>
+    document.querySelectorAll('[data-copy-referral]').forEach(function (button) {
+        button.addEventListener('click', function () {
+            navigator.clipboard.writeText(button.dataset.copyReferral).then(function () {
+                button.innerHTML = '<i class="bi bi-check2"></i>';
+                window.setTimeout(function () { button.innerHTML = '<i class="bi bi-copy"></i>'; }, 1600);
+            });
+        });
+    });
+</script>
 {% endblock %}

@@ -38,6 +38,10 @@
        href="/django-admin/">
         <i class="bi bi-sliders2 shrink-0"></i><span>Django admin</span>
     </a>
+        <a class="flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-bold {% if nav_active == 'stkpush_test' %}bg-vf-primary text-white shadow-md shadow-vf-primary/20{% else %}text-vf-muted hover:bg-emerald-100/70 hover:text-vf-dark{% endif %} transition"
+           href="{% url 'payments:stkpush_test' %}">
+            <i class="bi bi-phone-vibrate shrink-0"></i><span>Test STK push</span>
+        </a>
 </nav>
 
 {% else %}

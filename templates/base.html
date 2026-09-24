@@ -99,6 +99,9 @@
                                 <i class="bi bi-megaphone"></i>Campaigns
                             </a>
                         {% endif %}
+                        <a href="{% url 'accounts:referrals' %}" class="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-bold text-vf-muted hover:text-vf-primary hover:bg-emerald-50 transition">
+                            <i class="bi bi-gift"></i>Referrals
+                        </a>
 
                         <!-- Account dropdown -->
                         <div class="relative" id="accountMenu">
@@ -120,6 +123,9 @@
                                 {% endif %}
                                 <a href="{% url 'dashboard' %}" class="flex items-center gap-2 px-4 py-2.5 text-sm font-semibold hover:bg-slate-50">
                                     <i class="bi bi-speedometer2 text-vf-muted"></i>Dashboard
+                                </a>
+                                <a href="{% url 'accounts:referrals' %}" class="flex items-center gap-2 px-4 py-2.5 text-sm font-semibold hover:bg-slate-50">
+                                    <i class="bi bi-gift text-vf-muted"></i>Referrals
                                 </a>
                                 <hr class="border-vf-line my-1">
                                 <form method="post" action="{% url 'accounts:logout' %}">
@@ -143,6 +149,9 @@
                 <!-- Mobile: right side -->
                 <div class="flex md:hidden items-center gap-2">
                     {% if user.is_authenticated %}
+                        <a href="{% url 'accounts:referrals' %}" class="grid place-items-center w-9 h-9 rounded-xl bg-emerald-100 text-emerald-800" aria-label="Referrals" title="Referrals">
+                            <i class="bi bi-gift"></i>
+                        </a>
                         <a href="{% url 'dashboard' %}" class="grid place-items-center w-9 h-9 rounded-xl bg-emerald-100 text-emerald-800 font-extrabold text-sm">
                             {{ user.display_name|slice:":1"|upper }}
                         </a>

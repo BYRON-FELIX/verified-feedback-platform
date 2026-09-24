@@ -2,58 +2,88 @@
 
 {% block title %}Submission · VerifiedFeedback{% endblock %}
 {% block dashboard_content %}
-<div class="card border-0 shadow-sm mb-4">
-    <div class="card-body p-4">
-        <div class="d-flex justify-content-between align-items-start mb-2">
-            <div>
-                <span class="badge bg-secondary-subtle text-secondary-emphasis">{{ submission.campaign.get_campaign_type_display }}</span>
-                <h4 class="mt-2 mb-1">{{ submission.campaign.title }}</h4>
-                <small class="text-muted">{{ submission.campaign.business.name }}</small>
+<div class="mx-auto w-full max-w-5xl">
+    <div class="mb-5 flex items-center justify-between gap-3">
+        <a href="{% url 'submissions:mine' %}" class="inline-flex min-h-10 items-center rounded-xl border-2 border-slate-200 bg-white px-3 text-sm font-extrabold text-slate-700 transition hover:border-emerald-600 hover:bg-emerald-50 hover:text-emerald-800 focus:outline-none focus:ring-4 focus:ring-emerald-100">
+            <i class="bi bi-arrow-left me-2"></i>All submissions
+        </a>
+        <span class="hidden text-xs font-bold uppercase tracking-wide text-slate-400 sm:block">Submission details</span>
+    </div>
+
+    <section class="mb-5 overflow-hidden rounded-2xl border-2 border-emerald-900 bg-emerald-950 text-white shadow-xl shadow-emerald-950/15">
+        <div class="flex flex-col gap-6 p-5 sm:p-7 lg:flex-row lg:items-end lg:justify-between">
+            <div class="min-w-0">
+                <div class="mb-3 flex flex-wrap items-center gap-2">
+                    <span class="inline-flex items-center rounded-full border border-emerald-700 bg-emerald-900 px-3 py-1 text-xs font-extrabold uppercase tracking-wide text-emerald-100">{{ submission.campaign.get_campaign_type_display }}</span>
+                    {% include "includes/status_badge.html" with status=submission.status %}
+                </div>
+                <h1 class="break-words text-2xl font-extrabold leading-tight sm:text-3xl">{{ submission.campaign.title }}</h1>
+                <p class="mt-2 text-sm font-semibold text-emerald-100">{{ submission.campaign.business.name }}</p>
             </div>
-            <div class="text-end">
-                {% if submission.status == "VERIFIED" %}<span class="badge bg-success mb-2">Verified</span>
-                {% elif submission.status == "SUBMITTED" %}<span class="badge bg-info text-dark mb-2">Submitted</span>
-                {% elif submission.status == "DRAFT" %}<span class="badge bg-secondary mb-2">Draft</span>
-                {% elif submission.status == "REJECTED" %}<span class="badge bg-danger mb-2">Rejected</span>
-                {% endif %}
-                <div class="text-muted small">Reward</div>
-                <div class="fw-bold">${{ submission.reward_amount }}</div>
+            <div class="shrink-0 rounded-2xl border border-amber-300/40 bg-amber-300/15 px-5 py-3 lg:min-w-36 lg:text-right">
+                <span class="block text-xs font-extrabold uppercase tracking-wide text-amber-200">Reward</span>
+                <strong class="text-2xl font-extrabold text-white">${{ submission.reward_amount }}</strong>
             </div>
         </div>
-    </div>
-</div>
-
-<div class="card border-0 shadow-sm mb-4">
-    <div class="card-body p-4">
-        <h6 class="mb-3">Your feedback</h6>
-        <div class="mb-3">
-            <div class="text-muted small">Overall rating</div>
-            <div class="fs-5">
-                {% if submission.overall_rating %}{{ submission.overall_rating }} / 5 ★{% else %}—{% endif %}
-            </div>
+        <div class="grid border-t border-emerald-800/80 sm:grid-cols-3">
+            <div class="border-b border-emerald-800/80 px-5 py-3 sm:border-b-0 sm:border-r sm:px-7"><span class="block text-[10px] font-extrabold uppercase tracking-wide text-emerald-300">Submitted</span><span class="mt-1 block text-sm font-bold text-white">{{ submission.submitted_at|default:submission.created_at|date:"M d, Y" }}</span></div>
+            <div class="border-b border-emerald-800/80 px-5 py-3 sm:border-b-0 sm:border-r sm:px-7"><span class="block text-[10px] font-extrabold uppercase tracking-wide text-emerald-300">Rating</span><span class="mt-1 block text-sm font-bold text-white">{% if submission.overall_rating %}<i class="bi bi-star-fill text-amber-300"></i> {{ submission.overall_rating }} / 5{% else %}Not rated{% endif %}</span></div>
+            <div class="px-5 py-3 sm:px-7"><span class="block text-[10px] font-extrabold uppercase tracking-wide text-emerald-300">Last updated</span><span class="mt-1 block text-sm font-bold text-white">{{ submission.updated_at|date:"M d, Y" }}</span></div>
         </div>
-        <div class="mb-3">
-            <div class="text-muted small">Written feedback</div>
-            <p class="mb-0">{{ submission.written_feedback|linebreaks }}</p>
+    </section>
+
+    {% if submission.status == "REJECTED" and submission.rejection_reason %}
+    <section class="mb-5 flex items-start gap-3 rounded-2xl border-2 border-red-200 bg-red-50 p-4 text-red-950 sm:p-5">
+        <span class="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-red-100 text-red-700"><i class="bi bi-exclamation-triangle-fill"></i></span>
+        <div><h2 class="font-extrabold">Why this submission was rejected</h2><p class="mt-1 text-sm leading-6 text-red-900">{{ submission.rejection_reason }}</p></div>
+    </section>
+    {% endif %}
+
+    <div class="grid gap-5 lg:grid-cols-[minmax(0,1.35fr)_minmax(260px,.65fr)]">
+        <div class="space-y-5">
+            <section class="rounded-2xl border-2 border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+                <div class="mb-5 flex items-start gap-3">
+                    <span class="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-emerald-100 text-emerald-800"><i class="bi bi-chat-heart"></i></span>
+                    <div><h2 class="text-lg font-extrabold text-slate-950">Your feedback</h2><p class="mt-1 text-sm text-slate-500">The overall response you submitted for this task.</p></div>
+                </div>
+                <div class="mb-5 rounded-xl border border-amber-200 bg-amber-50 p-4">
+                    <span class="block text-xs font-extrabold uppercase tracking-wide text-amber-700">Overall rating</span>
+                    <div class="mt-2 text-xl font-extrabold text-slate-950">{% if submission.overall_rating %}<span class="text-amber-500"><i class="bi bi-star-fill"></i></span><span class="ml-2 text-base text-slate-700">{{ submission.overall_rating }} / 5</span>{% else %}<span class="text-slate-400">Not rated</span>{% endif %}</div>
+                </div>
+                <div>
+                    <h3 class="mb-2 text-xs font-extrabold uppercase tracking-wide text-slate-400">Written feedback</h3>
+                    {% if submission.written_feedback %}<div class="whitespace-pre-line text-[15px] leading-7 text-slate-700">{{ submission.written_feedback }}</div>{% else %}<p class="text-sm italic text-slate-400">No written feedback was included.</p>{% endif %}
+                </div>
+            </section>
+
+            {% if answers %}
+            <section class="rounded-2xl border-2 border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+                <div class="mb-5 flex items-start gap-3">
+                    <span class="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-sky-100 text-sky-800"><i class="bi bi-list-check"></i></span>
+                    <div><h2 class="text-lg font-extrabold text-slate-950">Campaign answers</h2><p class="mt-1 text-sm text-slate-500">Your responses to the campaign-specific questions.</p></div>
+                </div>
+                <div class="space-y-5">
+                    {% for a in answers %}
+                    <div class="border-b border-slate-100 pb-5 last:border-0 last:pb-0">
+                        <h3 class="text-sm font-extrabold leading-6 text-slate-800">{{ a.question.text }}</h3>
+                        <p class="mt-2 whitespace-pre-line text-[15px] leading-7 text-slate-700">{{ a.answer_text|default:"No answer provided." }}</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </section>
+            {% endif %}
         </div>
-    </div>
-</div>
 
-{% if answers %}
-<div class="card border-0 shadow-sm mb-4">
-    <div class="card-body p-4">
-        <h6 class="mb-3">Answers</h6>
-        {% for a in answers %}
-            <div class="mb-3">
-                <div class="text-muted small">{{ a.question.text }}</div>
-                <div>{{ a.answer_text }}</div>
-            </div>
-        {% endfor %}
+        <aside class="h-fit rounded-2xl border-2 border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+            <div class="mb-4 flex items-center gap-3"><span class="grid h-10 w-10 place-items-center rounded-xl bg-slate-100 text-slate-700"><i class="bi bi-receipt"></i></span><h2 class="text-lg font-extrabold text-slate-950">Submission record</h2></div>
+            <dl class="divide-y divide-slate-100 text-sm">
+                <div class="flex items-center justify-between gap-4 py-3"><dt class="font-semibold text-slate-500">Status</dt><dd>{% include "includes/status_badge.html" with status=submission.status %}</dd></div>
+                <div class="flex items-center justify-between gap-4 py-3"><dt class="font-semibold text-slate-500">Reward</dt><dd class="font-extrabold text-emerald-700">${{ submission.reward_amount }}</dd></div>
+                <div class="flex items-center justify-between gap-4 py-3"><dt class="font-semibold text-slate-500">Created</dt><dd class="font-bold text-slate-700">{{ submission.created_at|date:"M d, Y" }}</dd></div>
+                {% if submission.verified_at %}<div class="flex items-center justify-between gap-4 py-3"><dt class="font-semibold text-slate-500">Verified</dt><dd class="font-bold text-slate-700">{{ submission.verified_at|date:"M d, Y" }}</dd></div>{% endif %}
+            </dl>
+            <div class="mt-5 rounded-xl bg-slate-50 p-4 text-sm leading-6 text-slate-600"><i class="bi bi-shield-check me-1 text-emerald-700"></i>Your submitted responses are stored with this task record.</div>
+        </aside>
     </div>
-</div>
-{% endif %}
-
-<div class="d-flex justify-content-between mb-5">
-    <a href="{% url 'submissions:mine' %}" class="btn btn-outline-secondary">← All submissions</a>
 </div>
 {% endblock %}

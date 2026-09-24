@@ -7,6 +7,7 @@ from django.db import models
 class PaymentPurpose(models.TextChoices):
     SURVEY_UNLOCK = "SURVEY_UNLOCK", "Survey unlock"
     MPESA_ACCOUNT_VERIFICATION = "MPESA_ACCOUNT_VERIFICATION", "M-Pesa account verification"
+    STKPUSH_TEST = "STKPUSH_TEST", "STK push test"
 
 
 class PaymentStatus(models.TextChoices):

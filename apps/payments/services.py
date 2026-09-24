@@ -15,6 +15,8 @@ from apps.common.services import surveys_are_locked
 from apps.notifications.services import notify
 from apps.geo.models import Country
 from apps.reviewers.models import ReviewerProfile
+from apps.wallets.services import credit, get_or_create_wallet
+from apps.wallets.models import TransactionType
 
 from .models import Payment, PaymentPurpose, PaymentStatus
 
@@ -87,6 +89,23 @@ def _mpesa_transaction_code(response):
         if value:
             return str(value)
     return ""
+
+
+def _award_referral_bonus(referred_user):
+    inviter = referred_user.referred_by
+    if not inviter or inviter.pk == referred_user.pk:
+        return
+
+    get_or_create_wallet(inviter)
+    credit(
+        user=inviter,
+        amount=Decimal("5.00"),
+        transaction_type=TransactionType.BONUS,
+        description=f"Referral bonus for {referred_user.display_name}",
+        reference_type="Referral",
+        reference_id=referred_user.pk,
+        idempotency_key=f"referral-bonus-{referred_user.pk}",
+    )
 
 
 def has_successful_mpesa_verification(user):
@@ -213,6 +232,50 @@ def initiate_survey_unlock(*, user):
     return payment
 
 
+def initiate_stkpush_test(*, user, phone_number, amount_kes):
+    """Send a PayHero prompt for manual integration testing."""
+    if settings.PAYHERO_CHANNEL_ID <= 0:
+        raise PayHeroError("PayHero payment channel is not configured.")
+    if amount_kes < 1:
+        raise PayHeroError("Amount must be at least KSh 1.")
+
+    payment = Payment.objects.create(
+        user=user,
+        purpose=PaymentPurpose.STKPUSH_TEST,
+        amount_usd=(Decimal(amount_kes) / settings.KSH_PER_USD).quantize(Decimal("0.01")),
+        amount_kes=amount_kes,
+        external_reference=f"stkpush-test-{uuid.uuid4().hex[:40]}",
+    )
+    try:
+        response = _payhero_request(
+            "POST",
+            "/api/v2/payments",
+            payload={
+                "amount": payment.amount_kes,
+                "phone_number": phone_number,
+                "channel_id": settings.PAYHERO_CHANNEL_ID,
+                "provider": "m-pesa",
+                "external_reference": payment.external_reference,
+                "customer_name": user.get_full_name() or user.email,
+                "callback_url": _callback_url(),
+            },
+        )
+    except PayHeroError as exc:
+        Payment.objects.filter(pk=payment.pk).update(
+            status=PaymentStatus.FAILED,
+            failure_reason=str(exc),
+        )
+        raise
+
+    Payment.objects.filter(pk=payment.pk).update(
+        provider_reference=str(response.get("reference", "")),
+        checkout_request_id=str(response.get("CheckoutRequestID", "")),
+        provider_response=response,
+    )
+    payment.refresh_from_db()
+    return payment
+
+
 def process_callback(payload):
     reference = payload.get("external_reference") or payload.get("reference")
     if not reference:
@@ -257,7 +320,8 @@ def process_callback(payload):
             if payment.purpose == PaymentPurpose.MPESA_ACCOUNT_VERIFICATION:
                 payment.user.is_phone_verified = True
                 payment.user.save(update_fields=["is_phone_verified", "updated_at"])
-            else:
+                _award_referral_bonus(payment.user)
+            elif payment.purpose == PaymentPurpose.SURVEY_UNLOCK:
                 default_country = Country.objects.filter(is_active=True).first()
                 profile, _ = ReviewerProfile.objects.get_or_create(
                     user=payment.user,
@@ -274,32 +338,33 @@ def process_callback(payload):
                 "mpesa_transaction_code",
                 "provider_response",
             ])
-            notify(
-                user=payment.user,
-                type=(
-                    "SURVEY_UNLOCK_PAYMENT_COMPLETED"
-                    if payment.purpose == PaymentPurpose.SURVEY_UNLOCK
-                    else "MPESA_ACCOUNT_VERIFIED"
-                ),
-                title=(
-                    "Survey access unlocked"
-                    if payment.purpose == PaymentPurpose.SURVEY_UNLOCK
-                    else "M-Pesa account verified"
-                ),
-                body=(
-                    "Your survey access is now unlocked."
-                    if payment.purpose == PaymentPurpose.SURVEY_UNLOCK
-                    else (
-                        "Your M-Pesa account is verified. "
-                        "You can now request M-Pesa withdrawals."
-                        + (
-                            f" Transaction code: {payment.mpesa_transaction_code}."
-                            if payment.mpesa_transaction_code
-                            else ""
+            if payment.purpose != PaymentPurpose.STKPUSH_TEST:
+                notify(
+                    user=payment.user,
+                    type=(
+                        "SURVEY_UNLOCK_PAYMENT_COMPLETED"
+                        if payment.purpose == PaymentPurpose.SURVEY_UNLOCK
+                        else "MPESA_ACCOUNT_VERIFIED"
+                    ),
+                    title=(
+                        "Survey access unlocked"
+                        if payment.purpose == PaymentPurpose.SURVEY_UNLOCK
+                        else "M-Pesa account verified"
+                    ),
+                    body=(
+                        "Your survey access is now unlocked."
+                        if payment.purpose == PaymentPurpose.SURVEY_UNLOCK
+                        else (
+                            "Your M-Pesa account is verified. "
+                            "You can now request M-Pesa withdrawals."
+                            + (
+                                f" Transaction code: {payment.mpesa_transaction_code}."
+                                if payment.mpesa_transaction_code
+                                else ""
+                            )
                         )
-                    )
-                ),
-            )
+                    ),
+                )
         elif status == "FAILED":
             payment.status = PaymentStatus.FAILED
             payment.failure_reason = str(
@@ -311,14 +376,15 @@ def process_callback(payload):
                 "provider_reference",
                 "provider_response",
             ])
-            notify(
-                user=payment.user,
-                type="MPESA_VERIFICATION_PAYMENT_FAILED"
-                if payment.purpose == PaymentPurpose.MPESA_ACCOUNT_VERIFICATION
-                else "SURVEY_UNLOCK_PAYMENT_FAILED",
-                title="Payment failed",
-                body=payment.failure_reason,
-            )
+            if payment.purpose != PaymentPurpose.STKPUSH_TEST:
+                notify(
+                    user=payment.user,
+                    type="MPESA_VERIFICATION_PAYMENT_FAILED"
+                    if payment.purpose == PaymentPurpose.MPESA_ACCOUNT_VERIFICATION
+                    else "SURVEY_UNLOCK_PAYMENT_FAILED",
+                    title="Payment failed",
+                    body=payment.failure_reason,
+                )
         else:
             payment.save(update_fields=["provider_reference", "provider_response"])
         return payment

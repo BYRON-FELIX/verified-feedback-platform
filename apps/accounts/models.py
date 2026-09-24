@@ -1,4 +1,6 @@
 import uuid
+import secrets
+import string
 
 from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.db import models
@@ -70,6 +72,15 @@ class User(AbstractUser):
     is_email_verified = models.BooleanField(default=False)
     is_phone_verified = models.BooleanField(default=False)
 
+    referral_code = models.CharField(max_length=12, unique=True, blank=True)
+    referred_by = models.ForeignKey(
+        "self",
+        on_delete=models.SET_NULL,
+        blank=True,
+        null=True,
+        related_name="referred_users",
+    )
+
     role = models.CharField(
         max_length=16,
         choices=UserRole.choices,
@@ -110,6 +121,13 @@ class User(AbstractUser):
                 n += 1
                 candidate = f"{base}{n}"
             self.username = candidate
+        if not self.referral_code:
+            alphabet = string.ascii_uppercase + string.digits
+            while True:
+                code = "VF-" + "".join(secrets.choice(alphabet) for _ in range(8))
+                if not User.objects.filter(referral_code=code).exists():
+                    self.referral_code = code
+                    break
         super().save(*args, **kwargs)
 
     def suspend(self, reason: str):

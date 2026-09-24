@@ -17,6 +17,16 @@ class EmailAuthenticationForm(AuthenticationForm):
 
 
 class BaseSignupForm(UserCreationForm):
+    referral_code = forms.CharField(
+        max_length=12,
+        required=False,
+        label="Referral code",
+        help_text="Optional. Enter the code shared by the person who invited you.",
+        widget=forms.TextInput(attrs={
+            "class": "form-control",
+            "placeholder": "VF-XXXXXXXX",
+        }),
+    )
     first_name = forms.CharField(
         max_length=60,
         widget=forms.TextInput(attrs={"class": "form-control"}),
@@ -44,12 +54,23 @@ class BaseSignupForm(UserCreationForm):
             raise forms.ValidationError("An account with this email already exists.")
         return email
 
+    def clean_referral_code(self):
+        code = (self.cleaned_data.get("referral_code") or "").strip().upper()
+        if not code:
+            return ""
+        if not User.objects.filter(referral_code=code).exists():
+            raise forms.ValidationError("That referral code is not valid.")
+        return code
+
     def save(self, commit=True):
         user = super().save(commit=False)
         user.email = self.cleaned_data["email"]
         user.first_name = self.cleaned_data["first_name"]
         user.last_name = self.cleaned_data["last_name"]
         user.role = self.role
+        referral_code = self.cleaned_data.get("referral_code")
+        if referral_code:
+            user.referred_by = User.objects.get(referral_code=referral_code)
         if commit:
             user.save()
         return user

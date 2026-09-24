@@ -69,7 +69,7 @@
 
     {# ── MOBILE BOTTOM NAV (reviewer only) ── #}
     {% if user.is_authenticated and user.role == "REVIEWER" %}
-    <nav class="fixed bottom-0 left-0 right-0 z-30 grid grid-cols-4 bg-white/95 backdrop-blur-lg border-t border-vf-line shadow-[0_-6px_20px_rgba(16,44,37,.08)] pb-safe lg:hidden" aria-label="Quick navigation">
+    <nav class="fixed bottom-0 left-0 right-0 z-30 grid grid-cols-5 bg-white/95 backdrop-blur-lg border-t border-vf-line shadow-[0_-6px_20px_rgba(16,44,37,.08)] pb-safe lg:hidden" aria-label="Quick navigation">
         <a href="{% url 'reviewers:dashboard' %}" class="flex flex-col items-center justify-center gap-0.5 py-2 text-[10px] font-extrabold {% if nav_active == 'dashboard' %}text-vf-primary{% else %}text-vf-muted{% endif %}">
             <i class="bi bi-grid-1x2-fill text-lg leading-none"></i>Home
         </a>
@@ -81,6 +81,9 @@
         </a>
         <a href="{% url 'withdrawals:wallet' %}" class="flex flex-col items-center justify-center gap-0.5 py-2 text-[10px] font-extrabold {% if nav_active == 'wallet' %}text-vf-primary{% else %}text-vf-muted{% endif %}">
             <i class="bi bi-wallet2 text-lg leading-none"></i>Wallet
+        </a>
+        <a href="{% url 'accounts:referrals' %}" class="flex flex-col items-center justify-center gap-0.5 py-2 text-[10px] font-extrabold {% if nav_active == 'referrals' %}text-vf-primary{% else %}text-vf-muted{% endif %}">
+            <i class="bi bi-gift text-lg leading-none"></i>Referrals
         </a>
     </nav>
     {% endif %}

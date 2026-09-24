@@ -46,6 +46,13 @@
                     {% if form.country.errors %}<p class="text-red-600 text-xs mt-1">{{ form.country.errors.0 }}</p>{% endif %}
                 </div>
 
+                <div>
+                    <label class="block text-sm font-bold text-vf-ink mb-1.5">Referral code <span class="text-vf-muted font-normal">(optional)</span></label>
+                    {{ form.referral_code }}
+                    {% if form.referral_code.help_text %}<p class="text-xs text-vf-muted mt-1">{{ form.referral_code.help_text }}</p>{% endif %}
+                    {% if form.referral_code.errors %}<p class="text-red-600 text-xs mt-1">{{ form.referral_code.errors.0 }}</p>{% endif %}
+                </div>
+
                 <div class="grid grid-cols-2 gap-3">
                     <div>
                         <label class="block text-sm font-bold text-vf-ink mb-1.5">Password</label>

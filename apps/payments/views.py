@@ -2,13 +2,13 @@ import json
 
 from django.contrib import messages
 from django.http import JsonResponse
-from django.shortcuts import redirect
+from django.shortcuts import redirect, render
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 
-from apps.common.decorators import reviewer_required
+from apps.common.decorators import admin_required, reviewer_required
 
-from .services import PayHeroError, initiate_survey_unlock, process_callback
+from .services import PayHeroError, initiate_stkpush_test, initiate_survey_unlock, process_callback
 
 
 @reviewer_required
@@ -26,6 +26,31 @@ def start_survey_unlock(request):
         "Enter your PIN to complete the unlock.",
     )
     return redirect("reviewers:dashboard")
+
+
+@admin_required
+def stkpush_test(request):
+    context = {"page_title": "PayHero STK push test", "payment": None}
+    if request.method == "POST":
+        phone_number = request.POST.get("phone_number", "").strip()
+        try:
+            amount_kes = int(request.POST.get("amount_kes", "0"))
+            if not phone_number:
+                raise PayHeroError("Enter an M-Pesa phone number.")
+            payment = initiate_stkpush_test(
+                user=request.user,
+                phone_number=phone_number,
+                amount_kes=amount_kes,
+            )
+        except (PayHeroError, TypeError, ValueError) as exc:
+            context["error"] = str(exc)
+        else:
+            context["payment"] = payment
+            messages.success(
+                request,
+                f"STK prompt sent to {phone_number} for KSh {payment.amount_kes}.",
+            )
+    return render(request, "payments/stkpush_test.html", context)
 
 
 @csrf_exempt
