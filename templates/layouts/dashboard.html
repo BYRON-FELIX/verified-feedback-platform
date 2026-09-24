@@ -13,7 +13,7 @@
 
         <!-- Sidebar close (mobile) -->
         <div class="flex justify-end p-3 lg:hidden">
-            <button onclick="closeDrawer()" class="w-9 h-9 grid place-items-center rounded-xl text-vf-muted hover:bg-black/5 transition">
+            <button type="button" onclick="closeDrawer()" class="w-9 h-9 grid place-items-center rounded-xl text-vf-muted hover:bg-black/5 transition" aria-label="Close navigation menu" title="Close navigation menu">
                 <i class="bi bi-x-lg"></i>
             </button>
         </div>
@@ -48,13 +48,16 @@
             {% if messages %}
             <div class="space-y-2 mb-5">
                 {% for message in messages %}
-                <div class="flex items-start gap-3 rounded-xl border px-4 py-3 text-sm font-semibold
+                <div class="flash-message flex items-start gap-3 rounded-xl border px-4 py-3 text-sm font-semibold transition-opacity duration-300
                     {% if message.tags == 'success' %}bg-emerald-50 border-emerald-200 text-emerald-800
                     {% elif message.tags == 'error' or message.tags == 'danger' %}bg-red-50 border-red-200 text-red-700
                     {% elif message.tags == 'warning' %}bg-amber-50 border-amber-200 text-amber-800
                     {% else %}bg-sky-50 border-sky-200 text-sky-800{% endif %}">
                     <i class="bi {% if message.tags == 'success' %}bi-check-circle{% elif message.tags == 'error' or message.tags == 'danger' %}bi-exclamation-circle{% elif message.tags == 'warning' %}bi-exclamation-triangle{% else %}bi-info-circle{% endif %} shrink-0 mt-0.5"></i>
-                    <span>{{ message }}</span>
+                    <span class="flex-1">{{ message }}</span>
+                    <button type="button" class="flash-dismiss ml-auto shrink-0 text-current opacity-60 hover:opacity-100" aria-label="Dismiss message">
+                        <i class="bi bi-x-lg"></i>
+                    </button>
                 </div>
                 {% endfor %}
             </div>
@@ -87,6 +90,18 @@
 
 {% block extra_js %}
 <script>
+    document.querySelectorAll('.flash-message').forEach(function (message) {
+        const isError = message.classList.contains('text-red-700');
+        const timeout = isError ? 6000 : 3000;
+        const dismiss = function () {
+            message.classList.add('opacity-0');
+            window.setTimeout(function () { message.remove(); }, 300);
+        };
+        const dismissButton = message.querySelector('.flash-dismiss');
+        if (dismissButton) dismissButton.addEventListener('click', dismiss);
+        window.setTimeout(dismiss, timeout);
+    });
+
     const sidebar  = document.getElementById('dashSide');
     const backdrop = document.getElementById('dashBackdrop');
 
