@@ -1,6 +1,7 @@
 """Base Django settings for the Verified Consumer Feedback Platform."""
 from pathlib import Path
 
+import dj_database_url
 import environ
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
@@ -16,7 +17,7 @@ if env_file.exists():
 
 # Core
 SECRET_KEY = env("DJANGO_SECRET_KEY", default="dev-only-insecure-key-change-me")
-DEBUG = True #env("DJANGO_DEBUG", default=True)
+DEBUG = env("DJANGO_DEBUG", default=True)
 ALLOWED_HOSTS = env("DJANGO_ALLOWED_HOSTS", default=["localhost", "127.0.0.1"])
 
 # Apps
@@ -86,24 +87,36 @@ TEMPLATES = [
 WSGI_APPLICATION = "config.wsgi.application"
 ASGI_APPLICATION = "config.asgi.application"
 
-# Database — dev uses SQLite; prod overrides to Postgres
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
+# Database — uses SQLite when DEBUG=True, PostgreSQL when DEBUG=False
+if DEBUG:
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.sqlite3",
+            "NAME": BASE_DIR / "db.sqlite3",
+        }
     }
-}
+else:
+    # Build PostgreSQL URL from environment variables
+    postgres_db = env("POSTGRES_DB")
+    postgres_user = env("POSTGRES_USER")
+    postgres_password = env("POSTGRES_PASSWORD")
+    postgres_host = env("POSTGRES_HOST")
+    postgres_port = env("POSTGRES_PORT", default="5432")
+    
+    database_url = f"postgresql://{postgres_user}:{postgres_password}@{postgres_host}:{postgres_port}/{postgres_db}"
+    
+    DATABASES = {
+        "default": dj_database_url.parse(
+            database_url,
+            conn_max_age=600,
+            conn_health_checks=True,
+        )
+    }
 
 # Auth
 AUTH_USER_MODEL = "accounts.User"
 
-AUTH_PASSWORD_VALIDATORS = [
-    {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
-    {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
-     "OPTIONS": {"min_length": 10}},
-    {"NAME": "django.contrib.auth.password_validation.CommonPasswordValidator"},
-    {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
-]
+AUTH_PASSWORD_VALIDATORS = []
 
 LOGIN_URL = "/auth/login/"
 LOGIN_REDIRECT_URL = "/dashboard/"
