@@ -35,7 +35,7 @@ chmod 640 "$ENV_FILE"
 install -d -o reviewz-site -g reviewz-site "$INSTALL_DIR/media" "$INSTALL_DIR/staticfiles"
 
 if [[ ! -x "$INSTALL_DIR/.venv/bin/python" ]]; then
-    runuser -u reviewz-site -- python3 -m venv "$INSTALL_DIR/.venv"
+    python3 -m venv "$INSTALL_DIR/.venv"
 fi
 
 chown -R reviewz-site:reviewz-site "$INSTALL_DIR/.venv"
