@@ -3,7 +3,13 @@ set -Eeuo pipefail
 
 ROOT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
 INSTALL_DIR=/var/www/reviewz
-ENV_FILE="$INSTALL_DIR/.env.production"
+if [[ -f "$INSTALL_DIR/.env" ]]; then
+    ENV_FILE="$INSTALL_DIR/.env"
+elif [[ -f "$INSTALL_DIR/.env.production" ]]; then
+    ENV_FILE="$INSTALL_DIR/.env.production"
+else
+    ENV_FILE="$INSTALL_DIR/.env"
+fi
 
 if [[ "$EUID" -ne 0 ]]; then
     echo "Run deployment as root: sudo $ROOT_DIR/deploy/deploy.sh" >&2
@@ -14,7 +20,7 @@ if [[ "$ROOT_DIR" != "$INSTALL_DIR" ]]; then
     exit 1
 fi
 if [[ ! -f "$ENV_FILE" ]]; then
-    echo "Missing $ENV_FILE. Run deploy/setup-vps.sh first." >&2
+    echo "Missing environment file ($INSTALL_DIR/.env or $INSTALL_DIR/.env.production). Run deploy/setup-vps.sh first." >&2
     exit 1
 fi
 for command in python3 runuser systemctl nginx curl; do

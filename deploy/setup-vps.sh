@@ -4,7 +4,13 @@ umask 077
 
 ROOT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
 INSTALL_DIR=/var/www/reviewz
-ENV_FILE="$INSTALL_DIR/.env.production"
+if [[ -f "$INSTALL_DIR/.env" ]]; then
+    ENV_FILE="$INSTALL_DIR/.env"
+elif [[ -f "$INSTALL_DIR/.env.production" ]]; then
+    ENV_FILE="$INSTALL_DIR/.env.production"
+else
+    ENV_FILE="$INSTALL_DIR/.env"
+fi
 created_env=false
 
 if [[ "$EUID" -ne 0 ]]; then

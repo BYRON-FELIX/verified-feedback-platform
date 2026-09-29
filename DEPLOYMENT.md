@@ -31,7 +31,7 @@ running it.
    ```
 
    The script creates a restricted Linux service account, generates
-   `.env.production` with restricted permissions and unique secrets, provisions
+   `.env` (or preserves `.env.production`) with restricted permissions and unique secrets, provisions
    the app-specific PostgreSQL role/database, creates the virtualenv, installs
    `requirements.txt`, runs migrations and `collectstatic`, and enables and
    starts the `reviewz` systemd service. The environment file is restricted
@@ -57,7 +57,7 @@ running it.
 
    Keep `X-Forwarded-Proto` in the proxied Nginx location; Django relies on it
    behind TLS termination.
-5. Configure PayHero credentials in `/var/www/reviewz/.env.production` if
+5. Configure PayHero credentials in `/var/www/reviewz/.env` (or `.env.production`) if
    payments are enabled, then redeploy with `sudo ./deploy/deploy.sh`. Set
    PayHero's callback URL to
    `https://reviewz.site/payments/payhero/callback/`.
@@ -65,14 +65,14 @@ running it.
 
    ```sh
    sudo -u reviewz-site /var/www/reviewz/.venv/bin/python \
-     /var/www/reviewz/deploy/with-env.py /var/www/reviewz/.env.production \
+     /var/www/reviewz/deploy/with-env.py /var/www/reviewz/.env \
      /var/www/reviewz/.venv/bin/python /var/www/reviewz/manage.py createsuperuser
    ```
 7. Load the 30 review tasks, owned by the active superuser:
 
    ```sh
    sudo -u reviewz-site /var/www/reviewz/.venv/bin/python \
-     /var/www/reviewz/deploy/with-env.py /var/www/reviewz/.env.production \
+     /var/www/reviewz/deploy/with-env.py /var/www/reviewz/.env \
      /var/www/reviewz/.venv/bin/python /var/www/reviewz/manage.py add_review_tasks --force
    ```
 
