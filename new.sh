@@ -53,14 +53,14 @@ cd "$INSTALL_DIR"
 rm -rf .venv staticfiles
 rm -f .env .env.production
 
-echo ">>> [6/7] Running fresh setup-vps.sh..."
-"$INSTALL_DIR/deploy/setup-vps.sh"
-
-echo ">>> [7/7] Installing Nginx configuration..."
+echo ">>> [6/7] Installing Nginx configuration..."
 cp "$INSTALL_DIR/deploy/nginx/reviewz.site.conf" /etc/nginx/sites-available/reviewz.site
 ln -sf /etc/nginx/sites-available/reviewz.site /etc/nginx/sites-enabled/reviewz.site
 nginx -t
 systemctl reload nginx
+
+echo ">>> [7/7] Running fresh setup-vps.sh..."
+"$INSTALL_DIR/deploy/setup-vps.sh"
 
 echo ""
 echo "=========================================================="

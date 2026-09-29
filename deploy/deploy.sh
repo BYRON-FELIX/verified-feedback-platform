@@ -85,10 +85,27 @@ systemctl restart reviewz.service
 if [[ -f "$NGINX_SITE" ]]; then
     systemctl reload nginx
 fi
-systemctl --no-pager --full status reviewz.service
-curl --fail --silent --show-error --max-time 5 \
-    --unix-socket /run/reviewz/gunicorn.sock \
-    -H 'Host: reviewz.site' \
-    -H 'X-Forwarded-Proto: https' \
-    http://localhost/ >/dev/null
+systemctl --no-pager --full status reviewz.service || true
+
+echo "Waiting for Gunicorn socket to become ready..."
+socket_ready=false
+for i in {1..30}; do
+    if [[ -S /run/reviewz/gunicorn.sock ]] && curl --silent --max-time 2 \
+        --unix-socket /run/reviewz/gunicorn.sock \
+        -H 'Host: reviewz.site' \
+        -H 'X-Forwarded-Proto: https' \
+        http://localhost/ >/dev/null 2>&1; then
+        socket_ready=true
+        break
+    fi
+    sleep 0.5
+done
+
+if [[ "$socket_ready" == false ]]; then
+    echo "✗ Gunicorn socket /run/reviewz/gunicorn.sock did not become ready in time." >&2
+    echo "Recent service logs:" >&2
+    journalctl -u reviewz.service -n 40 --no-pager >&2 || true
+    exit 1
+fi
+
 echo "Reviewz deployment is healthy through /run/reviewz/gunicorn.sock."
