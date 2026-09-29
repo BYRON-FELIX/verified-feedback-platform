@@ -6,6 +6,7 @@ After=network.target postgresql.service
 Type=simple
 User=reviewz-site
 Group=www-data
+SupplementaryGroups=reviewz-site
 WorkingDirectory=/var/www/reviewz
 EnvironmentFile=/var/www/reviewz/.env.production
 RuntimeDirectory=reviewz
