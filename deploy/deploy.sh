@@ -32,6 +32,7 @@ if [[ ! -x "$INSTALL_DIR/.venv/bin/python" ]]; then
     runuser -u reviewz-site -- python3 -m venv "$INSTALL_DIR/.venv"
 fi
 
+chown -R reviewz-site:reviewz-site "$INSTALL_DIR/.venv"
 runuser -u reviewz-site -- "$INSTALL_DIR/.venv/bin/pip" install --no-cache-dir --upgrade pip
 runuser -u reviewz-site -- "$INSTALL_DIR/.venv/bin/pip" install --no-cache-dir -r "$ROOT_DIR/requirements.txt"
 runuser -u reviewz-site -- "$INSTALL_DIR/.venv/bin/python" "$ROOT_DIR/deploy/with-env.py" \
