@@ -22,10 +22,10 @@ running it.
 
 1. Point DNS `A` records for `reviewz.site` and `www.reviewz.site` to the VPS
    IPv4 address. Add `AAAA` records only if the server accepts IPv6 traffic.
-2. Clone this repository to `/opt/reviewz` and run:
+2. Clone this repository to `/var/www/reviewz` and run:
 
    ```sh
-   cd /opt/reviewz
+   cd /var/www/reviewz
    sudo ./deploy/setup-vps.sh
    ```
 
@@ -38,7 +38,7 @@ running it.
 3. Install this app's Nginx site alongside existing sites:
 
    ```sh
-   sudo cp /opt/reviewz/deploy/nginx/reviewz.site.conf /etc/nginx/sites-available/reviewz.site
+   sudo cp /var/www/reviewz/deploy/nginx/reviewz.site.conf /etc/nginx/sites-available/reviewz.site
    sudo ln -s /etc/nginx/sites-available/reviewz.site /etc/nginx/sites-enabled/reviewz.site
    sudo nginx -t
    sudo systemctl reload nginx
@@ -55,27 +55,27 @@ running it.
 
    Keep `X-Forwarded-Proto` in the proxied Nginx location; Django relies on it
    behind TLS termination.
-5. Configure PayHero credentials in `/opt/reviewz/.env.production` if
+5. Configure PayHero credentials in `/var/www/reviewz/.env.production` if
    payments are enabled, then redeploy with `sudo ./deploy/deploy.sh`. Set
    PayHero's callback URL to
    `https://reviewz.site/payments/payhero/callback/`.
 6. Create an admin account:
 
    ```sh
-   sudo -u reviewz-site /opt/reviewz/.venv/bin/python \
-     /opt/reviewz/deploy/with-env.py /opt/reviewz/.env.production \
-     /opt/reviewz/.venv/bin/python /opt/reviewz/manage.py createsuperuser
+   sudo -u reviewz-site /var/www/reviewz/.venv/bin/python \
+     /var/www/reviewz/deploy/with-env.py /var/www/reviewz/.env.production \
+     /var/www/reviewz/.venv/bin/python /var/www/reviewz/manage.py createsuperuser
    ```
 
 ## Updates, logs, and backups
 
-From `/opt/reviewz`, update the checked-out code to the intended revision and
+From `/var/www/reviewz`, update the checked-out code to the intended revision and
 run `sudo ./deploy/deploy.sh`. This updates this app's virtualenv, database
 migrations, static files, and systemd service; it does not restart other
 projects.
 
 View application logs with `sudo journalctl -u reviewz -f`. PostgreSQL backups
-can be created with `sudo /opt/reviewz/deploy/backup-db.sh
+can be created with `sudo /var/www/reviewz/deploy/backup-db.sh
 [/path/to/backup-directory]`. Copy backups off the VPS and verify a restore
-before depending on them. User-uploaded media is in `/opt/reviewz/media/` and
+before depending on them. User-uploaded media is in `/var/www/reviewz/media/` and
 needs its own backup plan.

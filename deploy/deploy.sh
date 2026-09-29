@@ -2,7 +2,7 @@
 set -Eeuo pipefail
 
 ROOT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
-INSTALL_DIR=/opt/reviewz
+INSTALL_DIR=/var/www/reviewz
 ENV_FILE="$INSTALL_DIR/.env.production"
 
 if [[ "$EUID" -ne 0 ]]; then
