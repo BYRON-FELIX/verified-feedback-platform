@@ -3,8 +3,9 @@
 This deployment runs Django under Gunicorn managed by systemd, with the
 existing VPS PostgreSQL service and Nginx. It does not use Docker, install or
 configure a PostgreSQL server, change firewall rules, or replace other sites.
-The application listens only on `127.0.0.1:18081`; PostgreSQL database
-`reviewz_site` and role `reviewz_site_app` are dedicated to this app.
+Gunicorn serves requests through `/run/reviewz/gunicorn.sock`, accessed by
+Nginx; PostgreSQL database `reviewz_site` and role `reviewz_site_app` are
+dedicated to this app.
 
 ## VPS prerequisites
 
@@ -45,7 +46,8 @@ running it.
    ```
 
    If the symlink already exists, do not create a duplicate; check it points to
-   this site config.
+   this site config. The service uses a Unix socket in `/run/reviewz`, with
+   access granted to Nginx through the `www-data` group.
 4. After both DNS names resolve to this VPS and port 80 is reachable, enable
    HTTPS for these domains:
 
@@ -81,10 +83,20 @@ running it.
 
 ## Updates, logs, and backups
 
-From `/var/www/reviewz`, update the checked-out code to the intended revision and
-run `sudo ./deploy/deploy.sh`. This updates this app's virtualenv, database
-migrations, static files, and systemd service; it does not restart other
-projects.
+From `/var/www/reviewz`, update the checked-out code to the intended revision
+and run:
+
+```sh
+git pull --ff-only
+sudo ./deploy/deploy.sh
+```
+
+The deploy script installs the current systemd unit, updates this app's Nginx
+`proxy_pass` in `/etc/nginx/sites-available/reviewz.site` without replacing
+other settings (including Certbot TLS configuration), reloads systemd and
+Nginx, restarts Reviewz, and checks Gunicorn through its Unix socket. It also
+updates this app's virtualenv, database migrations, and static files; it does
+not restart other application services.
 
 View application logs with `sudo journalctl -u reviewz -f`. PostgreSQL backups
 can be created with `sudo /var/www/reviewz/deploy/backup-db.sh

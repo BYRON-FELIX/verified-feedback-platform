@@ -5,17 +5,20 @@ After=network.target postgresql.service
 [Service]
 Type=simple
 User=reviewz-site
-Group=reviewz-site
+Group=www-data
 WorkingDirectory=/var/www/reviewz
 EnvironmentFile=/var/www/reviewz/.env.production
-ExecStart=/var/www/reviewz/.venv/bin/gunicorn config.wsgi:application --bind unix:/var/www/reviewz/reviewz.sock --workers 3 --timeout 60
+RuntimeDirectory=reviewz
+RuntimeDirectoryMode=0750
+UMask=0007
+ExecStart=/var/www/reviewz/.venv/bin/gunicorn config.wsgi:application --bind unix:/run/reviewz/gunicorn.sock --umask 007 --workers 3 --timeout 60
 Restart=on-failure
 RestartSec=5
 PrivateTmp=true
 NoNewPrivileges=true
 ProtectSystem=strict
 ProtectHome=true
-ReadWritePaths=/var/www/reviewz /var/www/reviewz/media /var/www/reviewz/staticfiles
+ReadWritePaths=/var/www/reviewz/media /var/www/reviewz/staticfiles
 
 [Install]
 WantedBy=multi-user.target
