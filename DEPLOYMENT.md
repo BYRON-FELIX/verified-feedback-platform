@@ -66,6 +66,18 @@ running it.
      /var/www/reviewz/deploy/with-env.py /var/www/reviewz/.env.production \
      /var/www/reviewz/.venv/bin/python /var/www/reviewz/manage.py createsuperuser
    ```
+7. Load the 30 review tasks, owned by the active superuser:
+
+   ```sh
+   sudo -u reviewz-site /var/www/reviewz/.venv/bin/python \
+     /var/www/reviewz/deploy/with-env.py /var/www/reviewz/.env.production \
+     /var/www/reviewz/.venv/bin/python /var/www/reviewz/manage.py add_review_tasks --force
+   ```
+
+   Use `--owner-email admin@example.com` to select a particular active
+   superuser. The command is safe to rerun; it loads the tasks from
+   `fixtures/review_tasks.json` and does not create the demo users in that
+   fixture.
 
 ## Updates, logs, and backups
 
