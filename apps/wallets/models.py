@@ -54,7 +54,7 @@ class WalletTransaction(models.Model):
     Never update or delete rows here.
     """
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    wallet = models.ForeignKey(Wallet, on_delete=models.PROTECT, related_name="transactions")
+    wallet = models.ForeignKey(Wallet, on_delete=models.CASCADE, related_name="transactions")
     transaction_type = models.CharField(max_length=32, choices=TransactionType.choices)
     amount = models.DecimalField(
         max_digits=12, decimal_places=2,
@@ -76,4 +76,5 @@ class WalletTransaction(models.Model):
 
     def __str__(self):
         sign = "+" if self.amount >= 0 else ""
-        return f"{sign}{self.amount} {self.transaction_type} → {self.wallet.user.email}"
+        owner = self.wallet.user.email if self.wallet_id else "Deleted wallet"
+        return f"{sign}{self.amount} {self.transaction_type} → {owner}"

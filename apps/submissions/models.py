@@ -18,13 +18,23 @@ class Submission(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     application = models.OneToOneField(
         CampaignApplication,
-        on_delete=models.PROTECT,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
         related_name="submission",
     )
-    campaign = models.ForeignKey(Campaign, on_delete=models.PROTECT, related_name="submissions")
+    campaign = models.ForeignKey(
+        Campaign,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="submissions",
+    )
     reviewer = models.ForeignKey(
         settings.AUTH_USER_MODEL,
-        on_delete=models.PROTECT,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
         related_name="submissions",
     )
 
@@ -65,7 +75,9 @@ class Submission(models.Model):
         ]
 
     def __str__(self):
-        return f"{self.reviewer.email} → {self.campaign.title} ({self.status})"
+        reviewer = self.reviewer.email if self.reviewer_id else "Deleted reviewer"
+        campaign = self.campaign.title if self.campaign_id else "Deleted campaign"
+        return f"{reviewer} → {campaign} ({self.status})"
 
 
 class SubmissionAnswer(models.Model):
@@ -73,7 +85,9 @@ class SubmissionAnswer(models.Model):
     submission = models.ForeignKey(Submission, on_delete=models.CASCADE, related_name="answers")
     question = models.ForeignKey(
         "campaigns.CampaignQuestion",
-        on_delete=models.PROTECT,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
         related_name="answers",
     )
     answer_text = models.TextField(blank=True)
@@ -87,4 +101,5 @@ class SubmissionAnswer(models.Model):
         ]
 
     def __str__(self):
-        return f"Q: {self.question.text[:40]} → {self.answer_text[:40]}"
+        question = self.question.text[:40] if self.question_id else "Deleted question"
+        return f"Q: {question} → {self.answer_text[:40]}"

@@ -24,10 +24,10 @@ class WithdrawalProvider(models.TextChoices):
 
 class Withdrawal(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    wallet = models.ForeignKey(Wallet, on_delete=models.PROTECT, related_name="withdrawals")
+    wallet = models.ForeignKey(Wallet, on_delete=models.CASCADE, related_name="withdrawals")
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
-        on_delete=models.PROTECT,
+        on_delete=models.CASCADE,
         related_name="withdrawals",
     )
 

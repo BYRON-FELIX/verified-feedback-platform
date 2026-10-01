@@ -1,19 +1,23 @@
 from types import SimpleNamespace
 
+from django.apps import apps
 from django.contrib import admin
+from django.db.models.deletion import PROTECT
 from django.test import TestCase
 
 from apps.accounts.models import User
+from apps.geo.models import Country
 from apps.common.admin import PlatformSettingsAdmin
 from apps.common.models import PlatformSettings
 from apps.common.services import task_access_lock_reason
 from apps.payments.admin import PaymentAdmin
-from apps.payments.models import Payment
+from apps.payments.models import Payment, PaymentPurpose
+from apps.reviewers.models import ReviewerProfile
 from apps.wallets.admin import WalletTransactionAdmin
-from apps.wallets.models import WalletTransaction
+from apps.wallets.models import TransactionType, WalletTransaction
 from apps.wallets.services import get_or_create_wallet
 from apps.withdrawals.admin import WithdrawalAdmin
-from apps.withdrawals.models import Withdrawal
+from apps.withdrawals.models import Withdrawal, WithdrawalProvider
 
 
 class TaskAccessLockTests(TestCase):
@@ -70,3 +74,61 @@ class SuperuserDeletePermissionTests(TestCase):
             with self.subTest(model=model.__name__):
                 model_admin = admin_class(model, admin.site)
                 self.assertFalse(model_admin.has_delete_permission(request))
+
+
+class ProtectedRelationDeletionTests(TestCase):
+    def test_no_model_relation_blocks_parent_deletion(self):
+        protected_fields = [
+            f"{model._meta.label}.{field.name}"
+            for model in apps.get_models()
+            for field in model._meta.get_fields()
+            if field.concrete
+            and field.is_relation
+            and getattr(field.remote_field, "on_delete", None) is PROTECT
+        ]
+
+        self.assertEqual(protected_fields, [])
+
+    def test_deleting_user_removes_financial_records(self):
+        user = User.objects.create_user(email="delete-me@example.com", password="test-password")
+        wallet = get_or_create_wallet(user)
+        transaction = WalletTransaction.objects.create(
+            wallet=wallet,
+            transaction_type=TransactionType.ADJUSTMENT,
+            amount=10,
+            balance_after=10,
+        )
+        withdrawal = Withdrawal.objects.create(
+            wallet=wallet,
+            user=user,
+            amount=10,
+            net_amount=10,
+            provider=WithdrawalProvider.MPESA,
+            idempotency_key="delete-me-withdrawal",
+        )
+        payment = Payment.objects.create(
+            user=user,
+            purpose=PaymentPurpose.STKPUSH_TEST,
+            amount_usd=1,
+            amount_kes=100,
+            external_reference="delete-me-payment",
+        )
+
+        user.delete()
+
+        self.assertFalse(WalletTransaction.objects.filter(pk=transaction.pk).exists())
+        self.assertFalse(Withdrawal.objects.filter(pk=withdrawal.pk).exists())
+        self.assertFalse(Payment.objects.filter(pk=payment.pk).exists())
+
+    def test_deleting_country_preserves_reviewer_profile(self):
+        user = User.objects.create_user(
+            email="country-reviewer@example.com",
+            password="test-password",
+        )
+        country = Country.objects.create(code="ZZ", name="Test country")
+        profile = ReviewerProfile.objects.create(user=user, country=country)
+
+        country.delete()
+
+        profile.refresh_from_db()
+        self.assertIsNone(profile.country)

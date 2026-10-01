@@ -17,3 +17,6 @@ class SubmissionAdmin(admin.ModelAdmin):
     search_fields = ("campaign__title", "reviewer__email")
     inlines = [SubmissionAnswerInline]
     readonly_fields = ("created_at", "updated_at", "submitted_at", "verified_at")
+
+    def has_delete_permission(self, request, obj=None):
+        return request.user.is_superuser

@@ -49,7 +49,7 @@ class Category(models.Model):
 
 class Campaign(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    business = models.ForeignKey(Business, on_delete=models.PROTECT, related_name="campaigns")
+    business = models.ForeignKey(Business, on_delete=models.CASCADE, related_name="campaigns")
     category = models.ForeignKey(
         Category,
         on_delete=models.SET_NULL,

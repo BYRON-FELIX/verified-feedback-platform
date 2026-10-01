@@ -18,7 +18,9 @@ class ReviewerProfile(models.Model):
     date_of_birth = models.DateField(null=True, blank=True)
     country = models.ForeignKey(
         Country,
-        on_delete=models.PROTECT,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
         related_name="reviewer_profiles",
         help_text="Country where the reviewer is based.",
     )
