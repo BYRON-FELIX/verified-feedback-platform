@@ -1,7 +1,7 @@
 import base64
 import json
 import uuid
-from decimal import Decimal, ROUND_HALF_UP
+from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
 from urllib.error import HTTPError, URLError
 from urllib.parse import urlencode
 from urllib.request import Request, urlopen
@@ -109,10 +109,13 @@ def _award_referral_bonus(referred_user):
 
 
 def has_successful_mpesa_verification(user):
+    if not user.phone_number:
+        return False
     return Payment.objects.filter(
         user=user,
         purpose=PaymentPurpose.MPESA_ACCOUNT_VERIFICATION,
         status=PaymentStatus.SUCCESS,
+        phone_number=user.phone_number,
     ).exists()
 
 
@@ -136,6 +139,7 @@ def initiate_mpesa_account_verification(*, user):
         purpose=PaymentPurpose.MPESA_ACCOUNT_VERIFICATION,
         amount_usd=config.mpesa_account_verification_fee_usd,
         amount_kes=_amount_kes(config.mpesa_account_verification_fee_usd),
+        phone_number=user.phone_number,
         external_reference=f"mpesa-verification-{uuid.uuid4().hex[:36]}",
     )
     try:
@@ -200,6 +204,7 @@ def initiate_survey_unlock(*, user):
             purpose=PaymentPurpose.SURVEY_UNLOCK,
             amount_usd=config.premium_unlock_cost_usd,
             amount_kes=_amount_kes(config.premium_unlock_cost_usd),
+            phone_number=user.phone_number,
             external_reference=f"survey-unlock-{uuid.uuid4().hex[:40]}",
         )
     try:
@@ -244,6 +249,7 @@ def initiate_stkpush_test(*, user, phone_number, amount_kes):
         purpose=PaymentPurpose.STKPUSH_TEST,
         amount_usd=(Decimal(amount_kes) / settings.KSH_PER_USD).quantize(Decimal("0.01")),
         amount_kes=amount_kes,
+        phone_number=phone_number,
         external_reference=f"stkpush-test-{uuid.uuid4().hex[:40]}",
     )
     try:
@@ -277,6 +283,9 @@ def initiate_stkpush_test(*, user, phone_number, amount_kes):
 
 
 def process_callback(payload):
+    if not isinstance(payload, dict):
+        raise PayHeroError("PayHero callback payload is invalid.")
+
     reference = payload.get("external_reference") or payload.get("reference")
     if not reference:
         raise PayHeroError("PayHero callback has no reference.")
@@ -290,17 +299,48 @@ def process_callback(payload):
         ).first()
     if not payment:
         raise PayHeroError("Unknown PayHero payment reference.")
-    provider_reference = (
-        payload.get("reference")
-        or payment.provider_reference
-        or payment.external_reference
-    )
+    provider_reference = payment.provider_reference or payment.external_reference
     status_response = _payhero_request(
         "GET",
         "/api/v2/transaction-status",
         query={"reference": provider_reference},
     )
-    status = str(status_response.get("status", payload.get("status", ""))).upper()
+    if not isinstance(status_response, dict):
+        raise PayHeroError("PayHero transaction status response is invalid.")
+    status_value = status_response.get("status")
+    if not status_value:
+        raise PayHeroError("PayHero transaction status response has no status.")
+    status = str(status_value).upper()
+    if status not in {"SUCCESS", "FAILED", "PENDING", "QUEUED", "PROCESSING"}:
+        raise PayHeroError("PayHero transaction status response has an unknown status.")
+
+    expected_references = {
+        payment.external_reference,
+        payment.provider_reference,
+    } - {""}
+    for key in ("external_reference", "externalReference", "merchant_reference"):
+        response_reference = status_response.get(key)
+        if response_reference and str(response_reference) not in expected_references:
+            raise PayHeroError("PayHero transaction status reference does not match payment.")
+
+    response_amount = next(
+        (
+            status_response[key]
+            for key in ("amount", "amount_kes", "transaction_amount", "paid_amount")
+            if status_response.get(key) is not None
+        ),
+        None,
+    )
+    if status == "SUCCESS" and response_amount is None:
+        raise PayHeroError("PayHero transaction status response has no payment amount.")
+    if response_amount is not None:
+        try:
+            amount_matches = Decimal(str(response_amount)) == Decimal(payment.amount_kes)
+        except (InvalidOperation, TypeError, ValueError) as exc:
+            raise PayHeroError("PayHero transaction status has an invalid amount.") from exc
+        if not amount_matches:
+            raise PayHeroError("PayHero transaction amount does not match payment.")
+
     provider_reference = str(
         status_response.get("provider_reference")
         or status_response.get("third_party_reference")
@@ -315,9 +355,19 @@ def process_callback(payload):
         payment.provider_response = status_response
         payment.provider_reference = provider_reference
         if status == "SUCCESS":
+            phone_matches = (
+                payment.purpose != PaymentPurpose.MPESA_ACCOUNT_VERIFICATION
+                or (
+                    payment.phone_number
+                    and payment.phone_number == payment.user.phone_number
+                )
+            )
             if payment.purpose == PaymentPurpose.MPESA_ACCOUNT_VERIFICATION:
                 payment.mpesa_transaction_code = mpesa_transaction_code
-            if payment.purpose == PaymentPurpose.MPESA_ACCOUNT_VERIFICATION:
+            if (
+                payment.purpose == PaymentPurpose.MPESA_ACCOUNT_VERIFICATION
+                and phone_matches
+            ):
                 payment.user.is_phone_verified = True
                 payment.user.save(update_fields=["is_phone_verified", "updated_at"])
                 _award_referral_bonus(payment.user)
@@ -339,28 +389,45 @@ def process_callback(payload):
                 "provider_response",
             ])
             if payment.purpose != PaymentPurpose.STKPUSH_TEST:
+                verification_not_granted = (
+                    payment.purpose == PaymentPurpose.MPESA_ACCOUNT_VERIFICATION
+                    and not phone_matches
+                )
                 notify(
                     user=payment.user,
                     type=(
                         "SURVEY_UNLOCK_PAYMENT_COMPLETED"
                         if payment.purpose == PaymentPurpose.SURVEY_UNLOCK
-                        else "MPESA_ACCOUNT_VERIFIED"
+                        else (
+                            "MPESA_ACCOUNT_VERIFICATION_PHONE_CHANGED"
+                            if verification_not_granted
+                            else "MPESA_ACCOUNT_VERIFIED"
+                        )
                     ),
                     title=(
                         "Survey access unlocked"
                         if payment.purpose == PaymentPurpose.SURVEY_UNLOCK
-                        else "M-Pesa account verified"
+                        else (
+                            "Payment received; phone verification incomplete"
+                            if verification_not_granted
+                            else "M-Pesa account verified"
+                        )
                     ),
                     body=(
                         "Your survey access is now unlocked."
                         if payment.purpose == PaymentPurpose.SURVEY_UNLOCK
                         else (
-                            "Your M-Pesa account is verified. "
-                            "You can now request M-Pesa withdrawals."
-                            + (
-                                f" Transaction code: {payment.mpesa_transaction_code}."
-                                if payment.mpesa_transaction_code
-                                else ""
+                            "The phone number on your account changed after this prompt "
+                            "was sent. Complete M-Pesa verification again for your current number."
+                            if verification_not_granted
+                            else (
+                                "Your M-Pesa account is verified. "
+                                "You can now request M-Pesa withdrawals."
+                                + (
+                                    f" Transaction code: {payment.mpesa_transaction_code}."
+                                    if payment.mpesa_transaction_code
+                                    else ""
+                                )
                             )
                         )
                     ),

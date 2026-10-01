@@ -26,6 +26,7 @@ class Payment(models.Model):
     purpose = models.CharField(max_length=32, choices=PaymentPurpose.choices)
     amount_usd = models.DecimalField(max_digits=12, decimal_places=2)
     amount_kes = models.PositiveIntegerField()
+    phone_number = models.CharField(max_length=20, blank=True)
     status = models.CharField(
         max_length=16,
         choices=PaymentStatus.choices,

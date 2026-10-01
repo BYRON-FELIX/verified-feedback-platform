@@ -53,9 +53,14 @@ class ReviewerProfileForm(forms.ModelForm):
         profile = super().save(commit=False)
         self.user.first_name = self.cleaned_data["first_name"]
         self.user.last_name = self.cleaned_data["last_name"]
-        self.user.phone_number = self.cleaned_data["phone_number"]
+        new_phone_number = self.cleaned_data["phone_number"]
+        update_fields = ["first_name", "last_name", "phone_number"]
+        if self.user.phone_number != new_phone_number and self.user.is_phone_verified:
+            self.user.is_phone_verified = False
+            update_fields.append("is_phone_verified")
+        self.user.phone_number = new_phone_number
         if commit:
-            self.user.save(update_fields=["first_name", "last_name", "phone_number"])
+            self.user.save(update_fields=update_fields)
             profile.save()
             profile.preferred_categories.set(self.cleaned_data["preferred_categories"])
         return profile
