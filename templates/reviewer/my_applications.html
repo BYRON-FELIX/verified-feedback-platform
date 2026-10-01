@@ -44,12 +44,21 @@
 
                     <div class="grid grid-cols-2 gap-3 px-5 py-4 sm:px-6">
                         <div class="rounded-xl bg-slate-50 px-3 py-2.5"><span class="block text-[10px] font-extrabold uppercase tracking-wide text-slate-400">Applied</span><span class="mt-1 block text-sm font-bold text-slate-700">{{ a.applied_at|date:"M d, Y" }}</span></div>
-                        <div class="rounded-xl bg-slate-50 px-3 py-2.5"><span class="block text-[10px] font-extrabold uppercase tracking-wide text-slate-400">Next step</span><span class="mt-1 block text-sm font-bold text-slate-700">{% if a.status == "ACCEPTED" %}Submit feedback{% elif a.status == "COMPLETED" %}Review submitted{% elif a.status == "APPLIED" %}Await approval{% else %}View details{% endif %}</span></div>
+                        <div class="rounded-xl bg-slate-50 px-3 py-2.5"><span class="block text-[10px] font-extrabold uppercase tracking-wide text-slate-400">Next step</span><span class="mt-1 block text-sm font-bold text-slate-700">{% if a.status == "ACCEPTED" and phone_verification_required %}Complete phone verification{% elif a.status == "ACCEPTED" and surveys_locked %}Upgrade to premium{% elif a.status == "ACCEPTED" %}Submit feedback{% elif a.status == "COMPLETED" %}Review submitted{% elif a.status == "APPLIED" %}Await approval{% else %}View details{% endif %}</span></div>
                     </div>
 
                     <div class="mt-auto border-t border-slate-100 p-5 sm:p-6">
                         {% if a.status == "ACCEPTED" %}
+                            {% if phone_verification_required or surveys_locked %}
+                            {% if phone_verification_required %}
+                            <div class="mb-3 rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">Task access is paused. Complete phone verification from your dashboard before starting or submitting tasks.</div>
+                            {% else %}
+                            <div class="mb-3 rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">Task access is paused. Pay the one-time ${{ platform_settings.premium_unlock_cost_usd }} premium upgrade before starting or submitting tasks.</div>
+                            {% endif %}
+                            <a href="{% url 'reviewers:dashboard' %}" class="inline-flex min-h-12 w-full items-center justify-center rounded-xl border-2 border-emerald-600 bg-white px-5 py-3 font-extrabold text-emerald-800">{% if phone_verification_required %}Complete phone verification{% else %}Upgrade to premium{% endif %}</a>
+                            {% else %}
                             <a href="{% url 'submissions:start' a.id %}" class="inline-flex min-h-12 w-full items-center justify-center rounded-xl bg-emerald-700 px-5 py-3 font-extrabold text-white shadow-md shadow-emerald-700/15 transition hover:bg-emerald-800 focus:outline-none focus:ring-4 focus:ring-emerald-200">Start submission <i class="bi bi-arrow-right ms-2"></i></a>
+                            {% endif %}
                         {% elif a.status == "COMPLETED" %}
                             <a href="{% url 'submissions:mine' %}" class="inline-flex min-h-12 w-full items-center justify-center rounded-xl border-2 border-emerald-600 bg-white px-5 py-3 font-extrabold text-emerald-800 transition hover:bg-emerald-50 focus:outline-none focus:ring-4 focus:ring-emerald-100">View submission <i class="bi bi-arrow-up-right ms-2"></i></a>
                         {% else %}

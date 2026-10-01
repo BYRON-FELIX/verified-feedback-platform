@@ -64,15 +64,18 @@
 
 {% if existing_application %}
     {% if existing_application.status == "ACCEPTED" %}
-        <div class="mt-5 rounded-xl border-2 border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-900"><strong class="block">You're in.</strong><span class="mt-1 block">Your slot is ready. Complete the task to get paid.</span>
-            {% if not surveys_locked or campaign.campaign_type != "SURVEY" %}
+        <div class="mt-5 rounded-xl border-2 border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-900"><strong class="block">You're in.</strong><span class="mt-1 block">{% if phone_verification_required %}Your slot is ready. Complete phone verification before starting or submitting this task.{% elif surveys_locked %}Your slot is ready. Upgrade to premium before starting or submitting this task.{% else %}Your slot is ready. Complete the task to get paid.{% endif %}</span>
+            {% if not phone_verification_required and not surveys_locked %}
             <div class="mt-4">
                 <a href="{% url 'submissions:start' existing_application.id %}" class="inline-flex min-h-12 w-full items-center justify-center rounded-xl bg-emerald-700 px-5 py-3 font-extrabold text-white shadow-lg shadow-emerald-700/20 transition hover:bg-emerald-800">Start submission <i class="bi bi-arrow-right ms-2"></i>
                 </a>
             </div>
             {% else %}
+            <div class="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-3 text-amber-900">
+                {% if phone_verification_required %}Task access is paused. Complete phone verification from your dashboard before starting or submitting tasks.{% else %}Task access is paused. Pay the ${{ platform_settings.premium_unlock_cost_usd }} premium upgrade from your dashboard before starting or submitting tasks.{% endif %}
+            </div>
             <div class="mt-4">
-                <a href="{% url 'reviewers:dashboard' %}" class="inline-flex min-h-12 w-full items-center justify-center rounded-xl border-2 border-emerald-600 bg-white px-5 py-3 font-extrabold text-emerald-800">Unlock surveys</a>
+                <a href="{% url 'reviewers:dashboard' %}" class="inline-flex min-h-12 w-full items-center justify-center rounded-xl border-2 border-emerald-600 bg-white px-5 py-3 font-extrabold text-emerald-800">{% if phone_verification_required %}Complete phone verification{% else %}Upgrade to premium{% endif %}</a>
             </div>
             {% endif %}
         </div>
@@ -97,17 +100,11 @@
         </a>
     </div>
 {% else %}
-    {% if surveys_locked and campaign.campaign_type == "SURVEY" %}
-    <div class="mt-5 rounded-xl border-2 border-sky-200 bg-sky-50 p-4 text-sm text-sky-900">Surveys are locked after you reach the configured earnings threshold. Unlock access from your dashboard to apply.
-    </div>
-    <a href="{% url 'reviewers:dashboard' %}" class="mt-4 inline-flex min-h-12 w-full items-center justify-center rounded-xl border-2 border-sky-600 bg-white px-5 py-3 font-extrabold text-sky-800">Go to dashboard</a>
-    {% else %}
-        <form id="applyForm" method="post" action="{% url 'campaigns:reviewer_apply' campaign.slug %}" class="mt-5">
-            {% csrf_token %}
-            <button id="applyButton" type="submit" class="inline-flex min-h-12 w-full items-center justify-center rounded-xl bg-emerald-700 px-5 py-3 font-extrabold text-white shadow-lg shadow-emerald-700/20 transition hover:bg-emerald-800 focus:outline-none focus:ring-4 focus:ring-emerald-200">Apply for this task <i class="bi bi-arrow-right ms-2"></i>
-            </button>
+    <form id="applyForm" method="post" action="{% url 'campaigns:reviewer_apply' campaign.slug %}" class="mt-5">
+        {% csrf_token %}
+        <button id="applyButton" type="submit" class="inline-flex min-h-12 w-full items-center justify-center rounded-xl bg-emerald-700 px-5 py-3 font-extrabold text-white shadow-lg shadow-emerald-700/20 transition hover:bg-emerald-800 focus:outline-none focus:ring-4 focus:ring-emerald-200">Apply for this task <i class="bi bi-arrow-right ms-2"></i>
+        </button>
     </form>
-    {% endif %}
 {% endif %}
 </div>
 </aside>

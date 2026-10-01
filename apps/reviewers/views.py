@@ -7,6 +7,7 @@ from apps.common.services import (
     get_platform_settings,
     requires_account_verification,
     surveys_are_locked,
+    task_access_lock_reason,
 )
 from apps.geo.models import Country
 from apps.submissions.models import Submission
@@ -27,6 +28,7 @@ def dashboard(request):
         "submission_count": submission_count,
         "requires_account_verification": requires_account_verification(request.user, wallet),
         "surveys_locked": surveys_are_locked(request.user, wallet),
+        "task_access_lock_reason": task_access_lock_reason(request.user, wallet),
         "platform_settings": get_platform_settings(),
     }
     return render(request, "reviewer/dashboard.html", context)

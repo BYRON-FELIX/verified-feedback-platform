@@ -5,7 +5,7 @@ from django.utils import timezone
 from django.views.decorators.http import require_POST
 
 from apps.common.decorators import business_required, reviewer_required
-from apps.common.services import surveys_are_locked
+from apps.common.services import get_platform_settings, surveys_are_locked, task_access_lock_reason
 from apps.wallets.services import get_or_create_wallet
 
 from .forms import CampaignForm, QuestionFormSet, RequirementFormSet
@@ -14,7 +14,6 @@ from .models import (
     Campaign,
     CampaignApplication,
     CampaignStatus,
-    CampaignType,
     Category,
 )
 
@@ -165,10 +164,15 @@ def reviewer_campaign_list(request):
 
     applied_ids = set()
     surveys_locked = False
+    phone_verification_required = False
     if request.user.is_authenticated and request.user.role == "REVIEWER":
+        wallet = get_or_create_wallet(request.user)
         surveys_locked = surveys_are_locked(
             request.user,
-            get_or_create_wallet(request.user),
+            wallet,
+        )
+        phone_verification_required = (
+            task_access_lock_reason(request.user, wallet) == "account_verification"
         )
         applied_ids = set(
             CampaignApplication.objects
@@ -186,6 +190,8 @@ def reviewer_campaign_list(request):
         "applied_ids": applied_ids,
         "is_public_browse": not request.user.is_authenticated,
         "surveys_locked": surveys_locked,
+        "phone_verification_required": phone_verification_required,
+        "platform_settings": get_platform_settings(),
     })
 
 
@@ -197,10 +203,15 @@ def reviewer_campaign_detail(request, slug):
 
     existing = None
     surveys_locked = False
+    phone_verification_required = False
     if request.user.is_authenticated and request.user.role == "REVIEWER":
+        wallet = get_or_create_wallet(request.user)
         surveys_locked = surveys_are_locked(
             request.user,
-            get_or_create_wallet(request.user),
+            wallet,
+        )
+        phone_verification_required = (
+            task_access_lock_reason(request.user, wallet) == "account_verification"
         )
         existing = CampaignApplication.objects.filter(
             campaign=campaign, reviewer=request.user
@@ -212,6 +223,8 @@ def reviewer_campaign_detail(request, slug):
         "campaign": campaign,
         "existing_application": existing,
         "surveys_locked": surveys_locked,
+        "phone_verification_required": phone_verification_required,
+        "platform_settings": get_platform_settings(),
     })
 
 
@@ -235,17 +248,6 @@ def reviewer_campaign_apply(request, slug):
             messages.error(request, "This campaign is not currently accepting applications.")
             return redirect("campaigns:reviewer_detail", slug=slug)
 
-        if (
-            campaign.campaign_type == CampaignType.SURVEY
-            and surveys_are_locked(request.user, get_or_create_wallet(request.user))
-        ):
-            messages.error(
-                request,
-                "Surveys are locked because you reached the earnings threshold. "
-                "Unlock survey access from your dashboard.",
-            )
-            return redirect("campaigns:reviewer_detail", slug=slug)
-
         if campaign.filled_slots >= campaign.target_participants:
             messages.error(request, "This campaign is full.")
             return redirect("campaigns:reviewer_detail", slug=slug)
@@ -256,7 +258,7 @@ def reviewer_campaign_apply(request, slug):
             messages.info(request, "You have already applied to this campaign.")
             return redirect("campaigns:reviewer_detail", slug=slug)
 
-        application = CampaignApplication.objects.create(
+        CampaignApplication.objects.create(
             campaign=campaign,
             reviewer=request.user,
             status=ApplicationStatus.ACCEPTED,
@@ -266,11 +268,26 @@ def reviewer_campaign_apply(request, slug):
         campaign.filled_slots += 1
         campaign.save(update_fields=["filled_slots"])
 
-    messages.success(
-        request,
-        "You've been accepted. You now have a slot in this campaign. "
-        "Complete the task and submit your feedback to get paid."
+    lock_reason = task_access_lock_reason(
+        request.user,
+        get_or_create_wallet(request.user),
     )
+    if lock_reason == "account_verification":
+        messages.success(
+            request,
+            "You've been accepted and have a slot. Complete phone verification from your dashboard before starting or submitting the task.",
+        )
+    elif lock_reason == "premium_upgrade":
+        messages.success(
+            request,
+            "You've been accepted and have a slot. Pay the one-time premium upgrade fee from your dashboard before starting or submitting the task.",
+        )
+    else:
+        messages.success(
+            request,
+            "You've been accepted. You now have a slot in this campaign. "
+            "Complete the task and submit your feedback to get paid."
+        )
     return redirect("campaigns:reviewer_detail", slug=slug)
 
 
@@ -286,4 +303,10 @@ def reviewer_my_applications(request):
         "page_title": "My Applications",
         "nav_active": "applications",
         "applications": applications,
+        "surveys_locked": surveys_are_locked(request.user, get_or_create_wallet(request.user)),
+        "phone_verification_required": (
+            task_access_lock_reason(request.user, get_or_create_wallet(request.user))
+            == "account_verification"
+        ),
+        "platform_settings": get_platform_settings(),
     })

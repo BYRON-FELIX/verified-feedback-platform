@@ -62,7 +62,7 @@
                 </div>
                 {% endif %}
 
-                <form method="post" novalidate id="withdrawalForm">
+                <form method="post" novalidate id="withdrawalForm" data-country-code="{{ country_code }}">
                     {% csrf_token %}
 
                     <div class="mb-5">
@@ -116,7 +116,7 @@
                             <i class="bi bi-lock-fill mt-0.5 text-vf-primary"></i>
                             <div>
                                 <p class="text-sm font-extrabold text-vf-ink">Secure review</p>
-                                <p class="mt-1 text-xs leading-5 text-vf-muted">Your wallet is not debited when you submit. Funds are deducted only after an administrator completes the payout.</p>
+                                <p class="mt-1 text-xs leading-5 text-vf-muted">The requested amount is debited from your available balance as soon as you submit. It is refunded if the withdrawal fails or is cancelled.</p>
                             </div>
                         </div>
                     </div>
@@ -167,6 +167,15 @@
         </aside>
     </div>
 </div>
+
+<div id="withdrawalLoadingOverlay" class="fixed inset-0 z-[100] hidden items-center justify-center bg-slate-950/60 px-5 backdrop-blur-sm" role="status" aria-live="polite">
+    <div class="w-full max-w-sm rounded-3xl border border-white/20 bg-white p-7 text-center shadow-2xl">
+        <div id="withdrawalLoadingSpinner" class="mx-auto mb-5 h-12 w-12 animate-spin rounded-full border-4 border-emerald-200 border-t-emerald-700"></div>
+        <h2 id="withdrawalLoadingTitle" class="text-xl font-extrabold text-slate-950">Submitting withdrawal request</h2>
+        <p id="withdrawalLoadingMessage" class="mt-2 text-sm leading-6 text-slate-600">Please wait while we process your request.</p>
+        <button id="withdrawalLoadingClose" type="button" class="mt-5 hidden min-h-11 rounded-xl bg-emerald-700 px-5 py-2 font-extrabold text-white">Got it</button>
+    </div>
+</div>
 {% endblock %}
 
 {% block extra_js %}
@@ -181,6 +190,11 @@
         const amount = document.getElementById("id_amount");
         const form = document.getElementById("withdrawalForm");
         const submit = document.getElementById("submitWithdrawal");
+        const overlay = document.getElementById("withdrawalLoadingOverlay");
+        const spinner = document.getElementById("withdrawalLoadingSpinner");
+        const title = document.getElementById("withdrawalLoadingTitle");
+        const message = document.getElementById("withdrawalLoadingMessage");
+        const close = document.getElementById("withdrawalLoadingClose");
         if (!provider) return;
 
         function updateFields() {
@@ -196,13 +210,58 @@
         provider.addEventListener("change", updateFields);
         updateFields();
 
+        function showUnavailableMethod() {
+            const countryCode = form.dataset.countryCode;
+            const methodNotAllowed = countryCode === "KE"
+                ? provider.value !== "MPESA"
+                : provider.value === "MPESA";
+            if (!methodNotAllowed) return;
+
+            overlay.classList.remove("hidden");
+            overlay.classList.add("flex");
+            spinner.classList.remove("hidden");
+            close.classList.add("hidden");
+            title.textContent = "Checking withdrawal method";
+            message.textContent = "Please wait while we check the method available in your country.";
+            window.setTimeout(function () {
+                spinner.classList.add("hidden");
+                title.textContent = "Method not available";
+                message.textContent = countryCode === "KE"
+                    ? "Only M-Pesa withdrawals are allowed in Kenya. Select M-Pesa to continue."
+                    : "M-Pesa withdrawals are not allowed for your country. Select a non-M-Pesa method to continue.";
+                close.classList.remove("hidden");
+                overlay.setAttribute("role", "alert");
+            }, 900);
+        }
+
+        provider.addEventListener("change", showUnavailableMethod);
+
         if (amount) {
             amount.addEventListener("input", function () {
                 amount.setCustomValidity("");
             });
         }
 
-        form.addEventListener("submit", function () {
+        close.addEventListener("click", function () {
+            overlay.classList.add("hidden");
+            overlay.classList.remove("flex");
+        });
+
+        form.addEventListener("submit", function (event) {
+            const countryCode = form.dataset.countryCode;
+            const isMpesa = provider.value === "MPESA";
+            const methodNotAllowed = countryCode === "KE"
+                ? !isMpesa
+                : isMpesa;
+
+            if (methodNotAllowed) {
+                event.preventDefault();
+                showUnavailableMethod();
+                return;
+            }
+
+            overlay.classList.remove("hidden");
+            overlay.classList.add("flex");
             submit.disabled = true;
             submit.querySelector("span").textContent = "Submitting request…";
         });

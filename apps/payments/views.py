@@ -8,7 +8,30 @@ from django.views.decorators.http import require_POST
 
 from apps.common.decorators import admin_required, reviewer_required
 
-from .services import PayHeroError, initiate_stkpush_test, initiate_survey_unlock, process_callback
+from .services import (
+    PayHeroError,
+    initiate_mpesa_account_verification,
+    initiate_stkpush_test,
+    initiate_survey_unlock,
+    process_callback,
+)
+
+
+@reviewer_required
+@require_POST
+def start_mpesa_account_verification(request):
+    try:
+        payment = initiate_mpesa_account_verification(user=request.user)
+    except PayHeroError as exc:
+        messages.error(request, str(exc))
+        return redirect("reviewers:dashboard")
+
+    messages.info(
+        request,
+        f"An M-Pesa verification prompt for KSh {payment.amount_kes} was sent to your phone. "
+        "Enter your PIN to complete account verification.",
+    )
+    return redirect("reviewers:dashboard")
 
 
 @reviewer_required

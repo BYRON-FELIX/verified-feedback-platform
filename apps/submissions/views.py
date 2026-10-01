@@ -6,7 +6,7 @@ from django.utils import timezone
 
 from apps.campaigns.models import ApplicationStatus, Campaign, CampaignApplication
 from apps.common.decorators import business_required, reviewer_required
-from apps.common.services import requires_account_verification, surveys_are_locked
+from apps.common.services import requires_account_verification, task_access_lock_reason
 from apps.wallets.models import TransactionType
 from apps.wallets.services import credit, get_or_create_wallet
 
@@ -28,30 +28,36 @@ def start_or_view_submission(request, application_id):
         messages.error(request, "This application is not in a state that allows submission.")
         return redirect("campaigns:reviewer_my_applications")
 
+    campaign = application.campaign
+
+    lock_reason = task_access_lock_reason(request.user, get_or_create_wallet(request.user))
+    if lock_reason == "account_verification":
+        messages.error(
+            request,
+            "Task access is locked because you reached the account verification threshold. "
+            "Complete phone verification from your dashboard before starting or submitting tasks.",
+        )
+        return redirect("campaigns:reviewer_detail", slug=campaign.slug)
+    if lock_reason == "premium_upgrade":
+        messages.error(
+            request,
+            "Task access is locked because you reached the premium threshold. "
+            "Pay the one-time premium upgrade fee from your dashboard before starting or submitting tasks.",
+        )
+        return redirect("campaigns:reviewer_detail", slug=campaign.slug)
+
     submission, created = Submission.objects.get_or_create(
         application=application,
         defaults={
-            "campaign": application.campaign,
+            "campaign": campaign,
             "reviewer": request.user,
-            "reward_amount": application.campaign.reward_amount,
+            "reward_amount": campaign.reward_amount,
             "status": SubmissionStatus.DRAFT,
         },
     )
 
     if submission.status in (SubmissionStatus.VERIFIED, SubmissionStatus.SUBMITTED):
         return redirect("submissions:detail", pk=submission.pk)
-
-    campaign = application.campaign
-
-    if (
-        campaign.campaign_type == "SURVEY"
-        and surveys_are_locked(request.user, get_or_create_wallet(request.user))
-    ):
-        messages.error(
-            request,
-            "This survey is locked. Unlock survey access before submitting it.",
-        )
-        return redirect("campaigns:reviewer_detail", slug=campaign.slug)
 
     if request.method == "POST":
         form = DynamicQuestionForm(request.POST, campaign=campaign)

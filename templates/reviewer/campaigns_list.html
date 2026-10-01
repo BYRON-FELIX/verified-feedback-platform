@@ -30,7 +30,13 @@
     {% if surveys_locked %}
     <div class="flex flex-col sm:flex-row items-start sm:items-center gap-3 bg-amber-50 border border-amber-200 rounded-2xl px-4 py-3 mb-5 text-sm text-amber-900">
         <i class="bi bi-lock-fill text-amber-600 text-lg shrink-0"></i>
-        <div><strong>Survey tasks locked.</strong> Verify your account to unlock survey-type campaigns.</div>
+        <div><strong>Premium upgrade required.</strong> You can apply for tasks, but must pay the one-time ${{ platform_settings.premium_unlock_cost_usd }} premium fee from your dashboard before starting or submitting.</div>
+    </div>
+    {% endif %}
+    {% if phone_verification_required %}
+    <div class="flex flex-col sm:flex-row items-start sm:items-center gap-3 bg-amber-50 border border-amber-200 rounded-2xl px-4 py-3 mb-5 text-sm text-amber-900">
+        <i class="bi bi-shield-exclamation text-amber-600 text-lg shrink-0"></i>
+        <div><strong>Phone verification required.</strong> You can apply for tasks, but must complete verification from your dashboard before starting or submitting.</div>
     </div>
     {% endif %}
 

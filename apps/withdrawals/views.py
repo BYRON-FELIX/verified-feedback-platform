@@ -20,6 +20,7 @@ from .services import (
     mark_failed,
     mark_processing,
     request_withdrawal,
+    validate_withdrawal_provider,
 )
 
 
@@ -59,6 +60,7 @@ def request_withdrawal_view(request):
         if form.is_valid():
             try:
                 provider = form.cleaned_data["provider"]
+                validate_withdrawal_provider(provider, country_code)
                 if (
                     provider == WithdrawalProvider.MPESA
                     and not has_successful_mpesa_verification(request.user)
@@ -100,6 +102,7 @@ def request_withdrawal_view(request):
         "user_country_code": country_code,
         "mpesa_fee": PlatformSettings.get_solo().mpesa_account_verification_fee_usd,
         "mpesa_verified": has_successful_mpesa_verification(request.user),
+        "country_code": country_code or "",
     })
 
 
@@ -145,7 +148,7 @@ def admin_withdrawal_queue(request):
 @admin_required
 @require_POST
 def admin_withdrawal_action(request, pk, action):
-    withdrawal = get_object_or_404(Withdrawal, pk=pk)
+    get_object_or_404(Withdrawal, pk=pk)
     try:
         if action == "processing":
             mark_processing(withdrawal_id=pk, admin_user=request.user)

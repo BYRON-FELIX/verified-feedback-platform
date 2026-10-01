@@ -7,7 +7,7 @@ from django.utils import timezone
 from apps.common.models import PlatformSettings
 from apps.notifications.services import notify
 from apps.payments.services import has_successful_mpesa_verification
-from apps.wallets.models import TransactionType, Wallet
+from apps.wallets.models import TransactionType, Wallet, WalletTransaction
 from apps.wallets.services import debit, get_or_create_wallet
 
 from .models import Withdrawal, WithdrawalProvider, WithdrawalStatus
@@ -20,7 +20,7 @@ class WithdrawalError(Exception):
 @transaction.atomic
 def request_withdrawal(*, user, amount, provider, destination_phone="", destination_email=""):
     """
-    Creates a PENDING withdrawal. Debits the wallet only on COMPLETED.
+    Creates a PENDING withdrawal and reserves its funds immediately.
     """
     amount = Decimal(str(amount))
     min_amount = settings.MIN_WITHDRAWAL_USD
@@ -41,12 +41,8 @@ def request_withdrawal(*, user, amount, provider, destination_phone="", destinat
     if active:
         raise WithdrawalError("You already have a withdrawal in progress.")
 
-    # Country-based provider enforcement
     country_code = _user_country_code(user)
-    if country_code == "KE" and provider != WithdrawalProvider.MPESA:
-        raise WithdrawalError("Only M-Pesa is available in your country.")
-    if country_code != "KE" and provider == WithdrawalProvider.MPESA:
-        raise WithdrawalError("M-Pesa is not available in your country.")
+    validate_withdrawal_provider(provider, country_code)
 
     # Provider-specific validation
     if provider == WithdrawalProvider.MPESA:
@@ -88,6 +84,19 @@ def request_withdrawal(*, user, amount, provider, destination_phone="", destinat
         idempotency_key=f"wd-{user.id}-{timezone.now().timestamp()}",
     )
 
+    wallet.available_balance -= amount
+    wallet.save(update_fields=["available_balance", "updated_at"])
+    WalletTransaction.objects.create(
+        wallet=wallet,
+        transaction_type=TransactionType.WITHDRAWAL,
+        amount=-amount,
+        balance_after=wallet.available_balance,
+        reference_type="Withdrawal",
+        reference_id=withdrawal.id,
+        description=f"Withdrawal request via {withdrawal.get_provider_display()}",
+        idempotency_key=f"withdrawal-debit-{withdrawal.id}",
+    )
+
     notify(
         user=user,
         type="WITHDRAWAL_REQUESTED",
@@ -117,6 +126,13 @@ def _user_country_code(user):
     return None
 
 
+def validate_withdrawal_provider(provider, country_code):
+    if country_code == "KE" and provider != WithdrawalProvider.MPESA:
+        raise WithdrawalError("Only M-Pesa withdrawals are allowed in Kenya.")
+    if country_code != "KE" and provider == WithdrawalProvider.MPESA:
+        raise WithdrawalError("M-Pesa withdrawals are not available in your country.")
+
+
 @transaction.atomic
 def mark_processing(*, withdrawal_id, admin_user):
     w = Withdrawal.objects.select_for_update().get(pk=withdrawal_id)
@@ -135,15 +151,23 @@ def mark_completed(*, withdrawal_id, admin_user, provider_reference="", provider
     if w.status not in (WithdrawalStatus.PENDING, WithdrawalStatus.PROCESSING):
         raise WithdrawalError(f"Cannot complete from status {w.status}.")
 
-    debit(
-        user=w.user,
-        amount=w.amount,
-        transaction_type=TransactionType.WITHDRAWAL,
-        description=f"Withdrawal via {w.get_provider_display()}",
-        reference_type="Withdrawal",
-        reference_id=w.id,
+    debit_entry_exists = WalletTransaction.objects.filter(
         idempotency_key=f"withdrawal-debit-{w.id}",
-    )
+    ).exists()
+    if debit_entry_exists:
+        wallet = Wallet.objects.select_for_update().get(pk=w.wallet_id)
+        wallet.lifetime_withdrawn += w.amount
+        wallet.save(update_fields=["lifetime_withdrawn", "updated_at"])
+    else:
+        debit(
+            user=w.user,
+            amount=w.amount,
+            transaction_type=TransactionType.WITHDRAWAL,
+            description=f"Withdrawal via {w.get_provider_display()}",
+            reference_type="Withdrawal",
+            reference_id=w.id,
+            idempotency_key=f"withdrawal-debit-{w.id}",
+        )
 
     w.status = WithdrawalStatus.COMPLETED
     w.completed_at = timezone.now()
@@ -170,6 +194,7 @@ def mark_failed(*, withdrawal_id, admin_user, reason):
     w = Withdrawal.objects.select_for_update().get(pk=withdrawal_id)
     if w.status not in (WithdrawalStatus.PENDING, WithdrawalStatus.PROCESSING):
         raise WithdrawalError(f"Cannot fail from status {w.status}.")
+    _refund_withdrawal_balance(w, "failed")
     w.status = WithdrawalStatus.FAILED
     w.failure_reason = reason
     w.processed_by = admin_user
@@ -188,6 +213,30 @@ def cancel_by_user(*, withdrawal_id, user):
     w = Withdrawal.objects.select_for_update().get(pk=withdrawal_id, user=user)
     if w.status != WithdrawalStatus.PENDING:
         raise WithdrawalError("Only pending withdrawals can be cancelled.")
+    _refund_withdrawal_balance(w, "cancelled")
     w.status = WithdrawalStatus.CANCELLED
     w.save(update_fields=["status"])
     return w
+
+
+def _refund_withdrawal_balance(withdrawal, reason):
+    debit_key = f"withdrawal-debit-{withdrawal.id}"
+    refund_key = f"withdrawal-refund-{withdrawal.id}"
+    if not WalletTransaction.objects.filter(idempotency_key=debit_key).exists():
+        return
+    if WalletTransaction.objects.filter(idempotency_key=refund_key).exists():
+        return
+
+    wallet = Wallet.objects.select_for_update().get(pk=withdrawal.wallet_id)
+    wallet.available_balance += withdrawal.amount
+    wallet.save(update_fields=["available_balance", "updated_at"])
+    WalletTransaction.objects.create(
+        wallet=wallet,
+        transaction_type=TransactionType.WITHDRAWAL_REVERSAL,
+        amount=withdrawal.amount,
+        balance_after=wallet.available_balance,
+        reference_type="Withdrawal",
+        reference_id=withdrawal.id,
+        description=f"Refund for {reason} withdrawal",
+        idempotency_key=refund_key,
+    )

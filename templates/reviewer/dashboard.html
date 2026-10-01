@@ -60,10 +60,27 @@
     <div class="flex items-start gap-3">
         <i class="bi bi-shield-exclamation mt-1 text-xl text-amber-700"></i>
         <div><strong>Account verification required.</strong>
-        You reached ${{ platform_settings.verification_trigger_usd }} in earnings.
-        <span class="text-amber-900/80">Verify your phone number from your profile before continuing.</span></div>
+        You reached ${{ platform_settings.verification_trigger_usd }} in lifetime earnings. Task access is paused until you complete phone verification.
+        <span class="text-amber-900/80">A one-time ${{ platform_settings.mpesa_account_verification_fee_usd }} M-Pesa verification payment is required.</span></div>
     </div>
-    <a href="{% url 'reviewers:profile' %}" class="inline-flex min-h-11 shrink-0 items-center justify-center rounded-xl bg-amber-500 px-4 py-2 font-extrabold text-amber-950 transition hover:bg-amber-400">Verify account</a>
+    <form method="post" action="{% url 'payments:mpesa_account_verification' %}">
+        {% csrf_token %}
+        <button type="submit" class="inline-flex min-h-11 shrink-0 items-center justify-center rounded-xl bg-amber-500 px-4 py-2 font-extrabold text-amber-950 transition hover:bg-amber-400">Complete phone verification</button>
+    </form>
+</div>
+{% endif %}
+
+{% if surveys_locked %}
+<div class="mb-4 flex flex-col gap-4 rounded-2xl border-2 border-amber-200 bg-amber-50 p-4 text-amber-950 sm:flex-row sm:items-center sm:justify-between sm:p-5">
+    <div class="flex items-start gap-3">
+        <i class="bi bi-shield-lock mt-1 text-xl text-amber-700"></i>
+        <div><strong>Premium upgrade required.</strong>
+        You reached ${{ platform_settings.premium_unlock_trigger_usd }} in lifetime earnings. Pay the one-time ${{ platform_settings.premium_unlock_cost_usd }} premium upgrade to unlock task access. You will receive an M-Pesa prompt.</div>
+    </div>
+    <form method="post" action="{% url 'payments:survey_unlock' %}">
+        {% csrf_token %}
+        <button type="submit" class="inline-flex min-h-11 shrink-0 items-center justify-center rounded-xl bg-amber-500 px-4 py-2 font-extrabold text-amber-950 transition hover:bg-amber-400">Upgrade to premium</button>
+    </form>
 </div>
 {% endif %}
 
