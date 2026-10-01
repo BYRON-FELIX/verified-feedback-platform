@@ -1,0 +1,89 @@
+{% if payment %}
+<section
+    class="mb-5 rounded-2xl border-2 border-sky-200 bg-sky-50 p-5"
+    data-payment-poll
+    data-status-url="{% url 'payments:status' payment.pk %}"
+    data-initial-status="{{ payment.status }}"
+    aria-live="polite"
+>
+    <h2 class="text-lg font-extrabold text-slate-950">M-Pesa payment status</h2>
+    <p class="mt-1 text-sm text-slate-700">
+        Status: <strong data-payment-status>{{ payment.get_status_display }}</strong>
+    </p>
+    <p class="mt-2 text-sm text-slate-700" data-payment-message>
+        {% if payment.status == "SUCCESS" %}
+            Payment completed.
+        {% elif payment.status == "FAILED" %}
+            Payment failed{% if payment.failure_reason %}: {{ payment.failure_reason }}{% endif %}.
+        {% else %}
+            Waiting for M-Pesa confirmation.
+        {% endif %}
+    </p>
+    <p class="mt-2 text-sm font-bold text-emerald-900{% if not payment.mpesa_transaction_code %} hidden{% endif %}" data-payment-receipt>
+        M-Pesa transaction code: <span>{{ payment.mpesa_transaction_code }}</span>
+    </p>
+</section>
+<script>
+    (function () {
+        const panel = document.querySelector("[data-payment-poll]");
+        if (!panel || panel.dataset.pollInitialized === "true") return;
+        panel.dataset.pollInitialized = "true";
+
+        const statusElement = panel.querySelector("[data-payment-status]");
+        const messageElement = panel.querySelector("[data-payment-message]");
+        const receiptElement = panel.querySelector("[data-payment-receipt]");
+        const receiptValue = receiptElement.querySelector("span");
+        const completedStatuses = new Set(["SUCCESS", "FAILED"]);
+        const maxPolls = 10;
+        let pollCount = 0;
+
+        function renderResult(result) {
+            statusElement.textContent = result.status_display;
+            if (result.status === "SUCCESS") {
+                messageElement.textContent = "Payment completed successfully.";
+            } else if (result.status === "FAILED") {
+                messageElement.textContent = result.failure_reason
+                    ? "Payment failed: " + result.failure_reason
+                    : "Payment failed.";
+            }
+            if (result.mpesa_transaction_code) {
+                receiptValue.textContent = result.mpesa_transaction_code;
+                receiptElement.classList.remove("hidden");
+            }
+        }
+
+        async function pollPayment() {
+            pollCount += 1;
+            messageElement.textContent = "Checking payment status (" + pollCount + " of " + maxPolls + ")…";
+            try {
+                const response = await fetch(panel.dataset.statusUrl, {
+                    headers: {"Accept": "application/json"},
+                    credentials: "same-origin"
+                });
+                const result = await response.json();
+                if (!response.ok) {
+                    throw new Error(result.error || "Unable to check payment status.");
+                }
+                renderResult(result);
+                if (completedStatuses.has(result.status)) return;
+            } catch (error) {
+                messageElement.textContent = error.message || "Unable to check payment status.";
+            }
+
+            if (pollCount >= maxPolls) {
+                if (!completedStatuses.has(panel.dataset.initialStatus)) {
+                    statusElement.textContent = "Still pending";
+                    messageElement.textContent =
+                        "No final result after 10 checks. Check your payment history later.";
+                }
+                return;
+            }
+            window.setTimeout(pollPayment, 3000);
+        }
+
+        if (!completedStatuses.has(panel.dataset.initialStatus)) {
+            window.setTimeout(pollPayment, 3000);
+        }
+    })();
+</script>
+{% endif %}

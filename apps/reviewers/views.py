@@ -10,6 +10,7 @@ from apps.common.services import (
     task_access_lock_reason,
 )
 from apps.geo.models import Country
+from apps.payments.services import get_user_payment
 from apps.submissions.models import Submission
 from apps.wallets.services import get_or_create_wallet
 
@@ -21,6 +22,10 @@ from .models import ReviewerProfile
 def dashboard(request):
     wallet = get_or_create_wallet(request.user)
     submission_count = Submission.objects.filter(reviewer=request.user).count()
+    payment = get_user_payment(
+        user=request.user,
+        payment_id=request.GET.get("payment_id"),
+    ) if request.GET.get("payment_id") else None
     context = {
         "page_title": "Dashboard",
         "nav_active": "dashboard",
@@ -30,6 +35,7 @@ def dashboard(request):
         "surveys_locked": surveys_are_locked(request.user, wallet),
         "task_access_lock_reason": task_access_lock_reason(request.user, wallet),
         "platform_settings": get_platform_settings(),
+        "payment": payment,
     }
     return render(request, "reviewer/dashboard.html", context)
 

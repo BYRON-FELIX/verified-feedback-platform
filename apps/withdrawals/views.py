@@ -1,12 +1,14 @@
 from django.conf import settings
 from django.contrib import messages
 from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
 from django.views.decorators.http import require_POST
 
 from apps.common.decorators import admin_required, reviewer_required
 from apps.common.models import PlatformSettings
 from apps.payments.services import (
     PayHeroError,
+    get_user_payment,
     has_successful_mpesa_verification,
     initiate_mpesa_account_verification,
 )
@@ -54,6 +56,10 @@ def wallet_view(request):
 def request_withdrawal_view(request):
     wallet = get_or_create_wallet(request.user)
     country_code = _user_country_code(request.user)
+    payment = get_user_payment(
+        user=request.user,
+        payment_id=request.GET.get("payment_id"),
+    ) if request.GET.get("payment_id") else None
 
     if request.method == "POST":
         form = WithdrawalRequestForm(request.POST)
@@ -65,13 +71,15 @@ def request_withdrawal_view(request):
                     provider == WithdrawalProvider.MPESA
                     and not has_successful_mpesa_verification(request.user)
                 ):
-                    initiate_mpesa_account_verification(user=request.user)
+                    payment = initiate_mpesa_account_verification(user=request.user)
                     messages.info(
                         request,
                         "An M-Pesa verification prompt was sent to your phone. "
                         "Complete it, then return here to submit your withdrawal.",
                     )
-                    return redirect("withdrawals:request")
+                    return redirect(
+                        f"{reverse('withdrawals:request')}?payment_id={payment.pk}"
+                    )
                 w = request_withdrawal(
                     user=request.user,
                     amount=form.cleaned_data["amount"],
@@ -103,6 +111,7 @@ def request_withdrawal_view(request):
         "mpesa_fee": PlatformSettings.get_solo().mpesa_account_verification_fee_usd,
         "mpesa_verified": has_successful_mpesa_verification(request.user),
         "country_code": country_code or "",
+        "payment": payment,
     })
 
 

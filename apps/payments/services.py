@@ -5,6 +5,7 @@ from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
 from urllib.error import HTTPError, URLError
 from urllib.parse import urlencode
 from urllib.request import Request, urlopen
+from uuid import UUID
 
 from django.conf import settings
 from django.db import transaction
@@ -76,18 +77,59 @@ def _callback_url():
 
 
 def _mpesa_transaction_code(response):
-    """Extract the customer-facing M-Pesa receipt from PayHero's response."""
-    for key in (
-        "provider_reference",
+    """Find the customer-facing M-Pesa receipt in PayHero's response payload."""
+    receipt_keys = (
+        "mpesa_receipt_number",
+        "mpesa_receipt",
+        "transaction_code",
+        "receipt_number",
+        "receipt_no",
+        "receipt",
+        "transactionCode",
         "third_party_reference",
         "payment_reference",
         "transaction_reference",
-        "mpesa_receipt_number",
-        "MpesaReceiptNumber",
-    ):
-        value = response.get(key)
-        if value:
-            return str(value)
+        "provider_reference",
+    )
+    normalized_keys = [
+        "".join(character for character in key.lower() if character.isalnum())
+        for key in receipt_keys
+    ]
+    objects = [response]
+    candidates = []
+    while objects:
+        current = objects.pop()
+        if isinstance(current, dict):
+            for key, value in current.items():
+                normalized_key = "".join(
+                    character for character in str(key).lower() if character.isalnum()
+                )
+                if normalized_key in normalized_keys and value:
+                    if not isinstance(value, (dict, list)):
+                        candidates.append((normalized_key, str(value)))
+                if str(key).lower() in {"key", "name"} and isinstance(value, str):
+                    continue
+                objects.append(value)
+            case_insensitive = {
+                str(key).lower(): value
+                for key, value in current.items()
+            }
+            if "key" in case_insensitive and "value" in case_insensitive:
+                label = "".join(
+                    character
+                    for character in str(case_insensitive["key"]).lower()
+                    if character.isalnum()
+                )
+                pair_value = case_insensitive["value"]
+                if label in normalized_keys and pair_value:
+                    candidates.append((label, str(pair_value)))
+        elif isinstance(current, list):
+            objects.extend(current)
+
+    for key in normalized_keys:
+        for candidate_key, value in candidates:
+            if candidate_key == key:
+                return value
     return ""
 
 
@@ -117,6 +159,14 @@ def has_successful_mpesa_verification(user):
         status=PaymentStatus.SUCCESS,
         phone_number=user.phone_number,
     ).exists()
+
+
+def get_user_payment(*, user, payment_id):
+    try:
+        payment_uuid = UUID(str(payment_id))
+    except (AttributeError, TypeError, ValueError):
+        return None
+    return Payment.objects.filter(pk=payment_uuid, user=user).first()
 
 
 def initiate_mpesa_account_verification(*, user):
@@ -286,7 +336,16 @@ def process_callback(payload):
     if not isinstance(payload, dict):
         raise PayHeroError("PayHero callback payload is invalid.")
 
-    reference = payload.get("external_reference") or payload.get("reference")
+    callback_response = payload.get("response")
+    if callback_response is not None and not isinstance(callback_response, dict):
+        raise PayHeroError("PayHero callback response is invalid.")
+    callback_response = callback_response or {}
+    reference = (
+        payload.get("external_reference")
+        or callback_response.get("ExternalReference")
+        or callback_response.get("external_reference")
+        or payload.get("reference")
+    )
     if not reference:
         raise PayHeroError("PayHero callback has no reference.")
 
@@ -299,6 +358,13 @@ def process_callback(payload):
         ).first()
     if not payment:
         raise PayHeroError("Unknown PayHero payment reference.")
+    return refresh_payment_status(payment, callback_response=callback_response)
+
+
+def refresh_payment_status(payment, *, callback_response=None):
+    if payment.status in (PaymentStatus.SUCCESS, PaymentStatus.FAILED):
+        return payment
+
     provider_reference = payment.provider_reference or payment.external_reference
     status_response = _payhero_request(
         "GET",
@@ -310,15 +376,23 @@ def process_callback(payload):
     status_value = status_response.get("status")
     if not status_value:
         raise PayHeroError("PayHero transaction status response has no status.")
-    status = str(status_value).upper()
-    if status not in {"SUCCESS", "FAILED", "PENDING", "QUEUED", "PROCESSING"}:
+    provider_status = str(status_value).strip().upper()
+    if provider_status not in {"QUEUED", "SUCCESS", "FAILED"}:
         raise PayHeroError("PayHero transaction status response has an unknown status.")
+    if status_response.get("success") is False:
+        raise PayHeroError("PayHero could not retrieve the transaction status.")
+    status = provider_status
 
     expected_references = {
         payment.external_reference,
         payment.provider_reference,
     } - {""}
-    for key in ("external_reference", "externalReference", "merchant_reference"):
+    for key in (
+        "external_reference",
+        "externalReference",
+        "ExternalReference",
+        "merchant_reference",
+    ):
         response_reference = status_response.get(key)
         if response_reference and str(response_reference) not in expected_references:
             raise PayHeroError("PayHero transaction status reference does not match payment.")
@@ -331,8 +405,6 @@ def process_callback(payload):
         ),
         None,
     )
-    if status == "SUCCESS" and response_amount is None:
-        raise PayHeroError("PayHero transaction status response has no payment amount.")
     if response_amount is not None:
         try:
             amount_matches = Decimal(str(response_amount)) == Decimal(payment.amount_kes)
@@ -341,20 +413,39 @@ def process_callback(payload):
         if not amount_matches:
             raise PayHeroError("PayHero transaction amount does not match payment.")
 
+    if callback_response:
+        callback_amount = callback_response.get("Amount", callback_response.get("amount"))
+        if callback_amount is not None:
+            try:
+                callback_amount_matches = (
+                    Decimal(str(callback_amount)) == Decimal(payment.amount_kes)
+                )
+            except (InvalidOperation, TypeError, ValueError) as exc:
+                raise PayHeroError("PayHero callback has an invalid payment amount.") from exc
+            if not callback_amount_matches:
+                raise PayHeroError("PayHero callback amount does not match payment.")
+
     provider_reference = str(
         status_response.get("provider_reference")
         or status_response.get("third_party_reference")
         or payment.provider_reference
+        or payment.external_reference
     )
-    mpesa_transaction_code = _mpesa_transaction_code(status_response)
+    mpesa_transaction_code = (
+        _mpesa_transaction_code(callback_response or {})
+        or _mpesa_transaction_code(status_response)
+    )
 
     with transaction.atomic():
         payment = Payment.objects.select_for_update().get(pk=payment.pk)
-        if payment.status == PaymentStatus.SUCCESS:
+        if payment.status in (PaymentStatus.SUCCESS, PaymentStatus.FAILED):
             return payment
         payment.provider_response = status_response
         payment.provider_reference = provider_reference
         if status == "SUCCESS":
+            payment.mpesa_transaction_code = (
+                mpesa_transaction_code or payment.mpesa_transaction_code
+            )
             phone_matches = (
                 payment.purpose != PaymentPurpose.MPESA_ACCOUNT_VERIFICATION
                 or (
@@ -362,8 +453,6 @@ def process_callback(payload):
                     and payment.phone_number == payment.user.phone_number
                 )
             )
-            if payment.purpose == PaymentPurpose.MPESA_ACCOUNT_VERIFICATION:
-                payment.mpesa_transaction_code = mpesa_transaction_code
             if (
                 payment.purpose == PaymentPurpose.MPESA_ACCOUNT_VERIFICATION
                 and phone_matches

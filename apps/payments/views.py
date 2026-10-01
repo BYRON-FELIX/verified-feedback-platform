@@ -1,10 +1,12 @@
 import json
 
 from django.contrib import messages
-from django.http import JsonResponse
+from django.contrib.auth.decorators import login_required
+from django.http import Http404, JsonResponse
 from django.shortcuts import redirect, render
+from django.urls import reverse
 from django.views.decorators.csrf import csrf_exempt
-from django.views.decorators.http import require_POST
+from django.views.decorators.http import require_GET, require_POST
 
 from apps.common.decorators import admin_required, reviewer_required
 
@@ -13,7 +15,9 @@ from .services import (
     initiate_mpesa_account_verification,
     initiate_stkpush_test,
     initiate_survey_unlock,
+    get_user_payment,
     process_callback,
+    refresh_payment_status,
 )
 
 
@@ -31,7 +35,7 @@ def start_mpesa_account_verification(request):
         f"An M-Pesa verification prompt for KSh {payment.amount_kes} was sent to your phone. "
         "Enter your PIN to complete account verification.",
     )
-    return redirect("reviewers:dashboard")
+    return redirect(f"{reverse('reviewers:dashboard')}?payment_id={payment.pk}")
 
 
 @reviewer_required
@@ -48,7 +52,7 @@ def start_survey_unlock(request):
         f"PayHero sent an M-Pesa prompt for KSh {payment.amount_kes}. "
         "Enter your PIN to complete the unlock.",
     )
-    return redirect("reviewers:dashboard")
+    return redirect(f"{reverse('reviewers:dashboard')}?payment_id={payment.pk}")
 
 
 @admin_required
@@ -85,3 +89,22 @@ def payhero_callback(request):
     except (json.JSONDecodeError, PayHeroError):
         return JsonResponse({"received": False}, status=400)
     return JsonResponse({"received": True})
+
+
+@login_required
+@require_GET
+def payment_status(request, payment_id):
+    payment = get_user_payment(user=request.user, payment_id=payment_id)
+    if payment is None:
+        raise Http404("Payment not found.")
+    try:
+        payment = refresh_payment_status(payment)
+    except PayHeroError as exc:
+        return JsonResponse({"error": str(exc)}, status=502)
+
+    return JsonResponse({
+        "status": payment.status,
+        "status_display": payment.get_status_display(),
+        "mpesa_transaction_code": payment.mpesa_transaction_code,
+        "failure_reason": payment.failure_reason,
+    })

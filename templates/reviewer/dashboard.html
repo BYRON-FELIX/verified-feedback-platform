@@ -3,6 +3,7 @@
 {% block title %}Reviewer Dashboard · VerifiedFeedback{% endblock %}
 {% block dashboard_content %}
 <div class="mx-auto w-full max-w-6xl">
+    {% include "payments/payment_status.html" with payment=payment %}
     <div class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
             <p class="mb-2 text-xs font-extrabold uppercase tracking-[0.18em] text-emerald-700">Your workspace</p>

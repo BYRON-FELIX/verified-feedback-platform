@@ -39,8 +39,8 @@
             <div><dt class="font-bold text-emerald-800">PayHero reference</dt><dd class="break-all text-emerald-950">{{ payment.provider_reference|default:'Pending' }}</dd></div>
             <div><dt class="font-bold text-emerald-800">Checkout request ID</dt><dd class="break-all text-emerald-950">{{ payment.checkout_request_id|default:'Pending' }}</dd></div>
         </dl>
-        <p class="mt-4 text-sm text-emerald-900">Approve the prompt on the phone, then inspect the payment record or callback result.</p>
     </section>
+    {% include "payments/payment_status.html" with payment=payment %}
     {% endif %}
 </div>
 {% endblock %}
