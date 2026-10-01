@@ -65,7 +65,9 @@ install -d -o reviewz-site -g reviewz-site "$INSTALL_DIR/media" "$INSTALL_DIR/st
 
 database_password="$(sed -n 's|^DATABASE_URL=postgresql://reviewz_site_app:\([^@]*\)@127\.0\.0\.1:5432/reviewz_site$|\1|p' "$ENV_FILE")"
 if [[ -z "$database_password" || ! "$database_password" =~ ^[a-fA-F0-9]+$ ]]; then
-    echo "DATABASE_URL must use the local reviewz_site_app/reviewz_site database with a hex password." >&2
+    echo "Invalid DATABASE_URL in $ENV_FILE." >&2
+    echo "Use exactly: postgresql://reviewz_site_app:<hex-password>@127.0.0.1:5432/reviewz_site" >&2
+    echo "Generate a password with: openssl rand -hex 32" >&2
     exit 1
 fi
 
