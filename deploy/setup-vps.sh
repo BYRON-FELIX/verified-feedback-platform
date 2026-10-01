@@ -63,11 +63,63 @@ chmod 640 "$ENV_FILE"
 
 install -d -o reviewz-site -g reviewz-site "$INSTALL_DIR/media" "$INSTALL_DIR/staticfiles"
 
+python3 - "$ENV_FILE" <<'PY'
+import os
+import re
+import secrets
+import stat
+import sys
+import tempfile
+from pathlib import Path
+
+env_path = Path(sys.argv[1])
+content = env_path.read_text()
+lines = content.splitlines(keepends=True)
+database_url_indexes = [
+    index for index, line in enumerate(lines)
+    if line.startswith("DATABASE_URL=")
+]
+if len(database_url_indexes) != 1:
+    raise SystemExit(
+        f"Expected exactly one DATABASE_URL entry in {env_path}; refusing to modify it."
+    )
+
+index = database_url_indexes[0]
+database_url = lines[index].rstrip("\r\n").partition("=")[2]
+pattern = re.compile(
+    r"postgresql://reviewz_site_app:([a-fA-F0-9]+)@127\.0\.0\.1:5432/reviewz_site"
+)
+if not pattern.fullmatch(database_url):
+    print(
+        f"Invalid DATABASE_URL in {env_path}; replacing it with the required local "
+        "database URL and a newly generated password."
+    )
+    password = secrets.token_hex(32)
+    newline = "\r\n" if lines[index].endswith("\r\n") else "\n"
+    lines[index] = (
+        f"DATABASE_URL=postgresql://reviewz_site_app:{password}"
+        "@127.0.0.1:5432/reviewz_site" + newline
+    )
+    mode = stat.S_IMODE(env_path.stat().st_mode)
+    file_descriptor, temporary_path = tempfile.mkstemp(dir=env_path.parent)
+    try:
+        with os.fdopen(file_descriptor, "w") as temporary_file:
+            temporary_file.writelines(lines)
+            temporary_file.flush()
+            os.fsync(temporary_file.fileno())
+        os.chmod(temporary_path, mode)
+        os.replace(temporary_path, env_path)
+    except Exception:
+        try:
+            os.unlink(temporary_path)
+        except FileNotFoundError:
+            pass
+        raise
+PY
+
 database_password="$(sed -n 's|^DATABASE_URL=postgresql://reviewz_site_app:\([^@]*\)@127\.0\.0\.1:5432/reviewz_site$|\1|p' "$ENV_FILE")"
 if [[ -z "$database_password" || ! "$database_password" =~ ^[a-fA-F0-9]+$ ]]; then
-    echo "Invalid DATABASE_URL in $ENV_FILE." >&2
-    echo "Use exactly: postgresql://reviewz_site_app:<hex-password>@127.0.0.1:5432/reviewz_site" >&2
-    echo "Generate a password with: openssl rand -hex 32" >&2
+    echo "Failed to create a valid DATABASE_URL in $ENV_FILE." >&2
     exit 1
 fi
 
