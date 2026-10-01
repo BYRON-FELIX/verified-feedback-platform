@@ -30,6 +30,14 @@
     </span>
 </div>
 <nav class="flex flex-col gap-0.5 px-2" aria-label="Admin navigation">
+    <a class="flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-bold text-vf-muted hover:bg-emerald-100/70 hover:text-vf-dark transition"
+       href="/">
+        <i class="bi bi-globe2 shrink-0"></i><span>View website</span>
+    </a>
+    <a class="flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-bold {% if nav_active == 'campaigns' %}bg-vf-primary text-white shadow-md shadow-vf-primary/20{% else %}text-vf-muted hover:bg-emerald-100/70 hover:text-vf-dark{% endif %} transition"
+       href="{% url 'campaigns:reviewer_list' %}">
+        <i class="bi bi-search shrink-0"></i><span>Browse campaigns</span>
+    </a>
     <a class="flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-bold transition {% if nav_active == 'withdrawals' %}bg-vf-primary text-white shadow-md shadow-vf-primary/20{% else %}text-vf-muted hover:bg-emerald-100/70 hover:text-vf-dark{% endif %}"
        href="{% url 'withdrawals:admin_queue' %}">
         <i class="bi bi-wallet-fill shrink-0"></i><span>Withdrawal queue</span>

@@ -5,7 +5,11 @@ from apps.accounts.models import UserRole
 
 
 def landing(request):
-    if request.user.is_authenticated:
+    if (
+        request.user.is_authenticated
+        and not request.user.is_superuser
+        and request.user.role != UserRole.ADMIN
+    ):
         return redirect("/dashboard/")
     return render(request, "landing/index.html")
 
@@ -14,8 +18,7 @@ def landing(request):
 def dashboard_router(request):
     """Send the user to the correct dashboard based on role."""
     if request.user.is_superuser or request.user.role == UserRole.ADMIN:
-        return redirect("/django-admin/")
+        return redirect("campaigns:reviewer_list")
     if request.user.role == UserRole.BUSINESS:
         return redirect("/business/")
     return redirect("/reviewer/")
-

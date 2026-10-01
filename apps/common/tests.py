@@ -3,7 +3,8 @@ from types import SimpleNamespace
 from django.apps import apps
 from django.contrib import admin
 from django.db.models.deletion import PROTECT
-from django.test import TestCase
+from django.test import TestCase, Client
+from django.urls import reverse
 
 from apps.accounts.models import User
 from apps.geo.models import Country
@@ -132,3 +133,56 @@ class ProtectedRelationDeletionTests(TestCase):
 
         profile.refresh_from_db()
         self.assertIsNone(profile.country)
+
+
+class AdminSiteAccessTests(TestCase):
+    def test_admin_dashboard_opens_site_campaign_browser(self):
+        admin_user = User.objects.create_user(
+            email="site-admin@example.com",
+            password="test-password",
+            role="ADMIN",
+        )
+        client = Client()
+        client.force_login(admin_user)
+
+        response = client.get(reverse("dashboard"), secure=True)
+
+        self.assertRedirects(
+            response,
+            reverse("campaigns:reviewer_list"),
+            fetch_redirect_response=False,
+        )
+        site_response = client.get(response.url, secure=True)
+        self.assertEqual(site_response.status_code, 200)
+        self.assertContains(site_response, "Find tasks worth your time.")
+        self.assertContains(site_response, "Django admin")
+
+    def test_admin_can_open_public_homepage(self):
+        admin_user = User.objects.create_user(
+            email="homepage-admin@example.com",
+            password="test-password",
+            role="ADMIN",
+        )
+        client = Client()
+        client.force_login(admin_user)
+
+        response = client.get("/", secure=True)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Your experience")
+
+    def test_superuser_dashboard_also_opens_site_campaign_browser(self):
+        superuser = User.objects.create_superuser(
+            email="site-superuser@example.com",
+            password="test-password",
+        )
+        client = Client()
+        client.force_login(superuser)
+
+        response = client.get(reverse("dashboard"), secure=True)
+
+        self.assertRedirects(
+            response,
+            reverse("campaigns:reviewer_list"),
+            fetch_redirect_response=False,
+        )
