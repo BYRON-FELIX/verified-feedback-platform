@@ -50,7 +50,13 @@ class Category(models.Model):
 class Campaign(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     business = models.ForeignKey(Business, on_delete=models.PROTECT, related_name="campaigns")
-    category = models.ForeignKey(Category, on_delete=models.PROTECT, related_name="campaigns")
+    category = models.ForeignKey(
+        Category,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="campaigns",
+    )
 
     title = models.CharField(max_length=160)
     slug = models.SlugField(max_length=180, unique=True)
